@@ -33,11 +33,6 @@ export async function UiRoute(App: FastifyInstance) {
         <h2>Save Movie Link</h2>
 
         <label>
-          Admin Token
-          <input name="adminToken" type="password" placeholder="Optional if ADMIN_TOKEN is not configured" />
-        </label>
-
-        <label>
           IMDb ID
           <input name="imdbId" required placeholder="tt10375396" />
         </label>
@@ -53,11 +48,6 @@ export async function UiRoute(App: FastifyInstance) {
 
       <form class="card" id="serieForm">
         <h2>Save Series Episode Link</h2>
-
-        <label>
-          Admin Token
-          <input name="adminToken" type="password" placeholder="Optional if ADMIN_TOKEN is not configured" />
-        </label>
 
         <label>
           IMDb ID

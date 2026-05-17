@@ -145,13 +145,19 @@ GET /stream/movie/tt10375396.json
 ### Stremio Series Stream
 
 ```http
-GET /stream/series/:imdbId/:season/:episode.json
+GET /stream/series/:id.json
+```
+
+Stremio sends series IDs in this format:
+
+```txt
+tt10375397:1:2
 ```
 
 Example:
 
 ```http
-GET /stream/series/tt10375397/1/2.json
+GET /stream/series/tt10375397%3A1%3A2.json
 ```
 
 ## Setup
@@ -223,3 +229,33 @@ or the UI token field.
 ## License
 
 MIT
+
+
+## Supported Environment Variables
+
+This project supports only these environment variables:
+
+```env
+FIREBASE_PROJECT_ID=
+FIREBASE_CLIENT_EMAIL=
+FIREBASE_PRIVATE_KEY_BASE64=
+FIREBASE_DATABASE_URL=
+ADDON_BASE_URL=
+PORT=
+```
+
+### Generate `FIREBASE_PRIVATE_KEY_BASE64`
+
+From your Firebase service account JSON file:
+
+```bash
+node -e "const key=require('./service-account.json').private_key; console.log(Buffer.from(key, 'utf8').toString('base64'))"
+```
+
+Then set it on Beamup:
+
+```bash
+beamup secrets FIREBASE_PRIVATE_KEY_BASE64 "PASTE_BASE64_VALUE_HERE"
+```
+
+Do not set `FIREBASE_PRIVATE_KEY` or `FIREBASE_SERVICE_ACCOUNT_BASE64`; they are not used by this project.

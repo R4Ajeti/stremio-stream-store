@@ -9,10 +9,6 @@ async function SubmitJson(path, payload, resultId) {
       'Content-Type': 'application/json',
     }
 
-    if (payload.adminToken) {
-      Headers.Authorization = `Bearer ${payload.adminToken}`
-    }
-
     const Response = await fetch(path, {
       method: 'POST',
       headers: Headers,
@@ -34,7 +30,6 @@ document.getElementById('movieForm').addEventListener('submit', async (Event) =>
   const FormDataObj = new FormData(Event.target)
 
   await SubmitJson('/api/link/movie', {
-    adminToken: FormDataObj.get('adminToken'),
     imdbId: FormDataObj.get('imdbId'),
     url: FormDataObj.get('url'),
   }, 'movieResult')
@@ -46,7 +41,6 @@ document.getElementById('serieForm').addEventListener('submit', async (Event) =>
   const FormDataObj = new FormData(Event.target)
 
   await SubmitJson('/api/link/serie', {
-    adminToken: FormDataObj.get('adminToken'),
     imdbId: FormDataObj.get('imdbId'),
     season: Number(FormDataObj.get('season')),
     episode: Number(FormDataObj.get('episode')),

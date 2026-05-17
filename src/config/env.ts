@@ -31,23 +31,29 @@ function GetOptionalNumberEnv(NameStr: string, DefaultInt: number): number {
 }
 
 function GetFirebasePrivateKey(): string {
-  const Base64PrivateKeyStr = GetRequiredEnv('FIREBASE_PRIVATE_KEY_BASE64')
-  return Buffer.from(Base64PrivateKeyStr, 'base64').toString('utf-8')
+  const PrivateKeyBase64Str = GetRequiredEnv('FIREBASE_PRIVATE_KEY_BASE64')
+  const PrivateKeyStr = Buffer.from(PrivateKeyBase64Str, 'base64').toString('utf-8').replace(/\\n/g, '\n')
+
+  if (!PrivateKeyStr.includes('-----BEGIN PRIVATE KEY-----')) {
+    throw new Error('Invalid FIREBASE_PRIVATE_KEY_BASE64: decoded value is missing BEGIN PRIVATE KEY header')
+  }
+
+  if (!PrivateKeyStr.includes('-----END PRIVATE KEY-----')) {
+    throw new Error('Invalid FIREBASE_PRIVATE_KEY_BASE64: decoded value is missing END PRIVATE KEY footer')
+  }
+
+  return PrivateKeyStr
 }
 
+const PortInt = GetOptionalNumberEnv('PORT', 3000)
+
 export const Env = {
-  PORT: GetOptionalNumberEnv('PORT', 3000),
-  NODE_ENV: GetOptionalEnv('NODE_ENV', 'development'),
+  PORT: PortInt,
 
-  ADDON_BASE_URL: GetOptionalEnv('ADDON_BASE_URL', `http://localhost:${GetOptionalNumberEnv('PORT', 3000)}`),
-  ADDON_ID: GetOptionalEnv('ADDON_ID', 'org.stremio.stream.store'),
-  ADDON_NAME: GetOptionalEnv('ADDON_NAME', 'Stremio Stream Store'),
-  ADDON_DESCRIPTION: GetOptionalEnv(
-    'ADDON_DESCRIPTION',
-    'Save and serve custom stream links for movies and TV episodes using IMDb IDs.',
-  ),
-
-  ADMIN_TOKEN: process.env.ADMIN_TOKEN || '',
+  ADDON_BASE_URL: GetOptionalEnv('ADDON_BASE_URL', `http://localhost:${PortInt}`),
+  ADDON_ID: 'org.stremio.stream.store',
+  ADDON_NAME: 'Stremio Stream Store',
+  ADDON_DESCRIPTION: 'Save and serve custom stream links for movies and TV episodes using IMDb IDs.',
 
   FIREBASE_PROJECT_ID: GetRequiredEnv('FIREBASE_PROJECT_ID'),
   FIREBASE_CLIENT_EMAIL: GetRequiredEnv('FIREBASE_CLIENT_EMAIL'),
