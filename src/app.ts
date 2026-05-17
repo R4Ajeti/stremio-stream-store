@@ -41,7 +41,6 @@ export async function BuildApp() {
     return {
       ok: true,
       name: Env.ADDON_NAME,
-      environment: Env.NODE_ENV,
       time: new Date().toISOString(),
     }
   })
