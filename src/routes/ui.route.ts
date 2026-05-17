@@ -8,6 +8,8 @@ export async function UiRoute(App: FastifyInstance) {
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Stremio Stream Store</title>
+  <link rel="icon" type="image/png" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/public/logo.png" />
   <link rel="stylesheet" href="/public/styles.css" />
 </head>
 <body>

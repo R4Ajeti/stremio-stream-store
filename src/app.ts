@@ -31,6 +31,12 @@ export async function BuildApp() {
     prefix: '/public/',
   })
 
+  App.get('/favicon.ico', async (_RequestObj, ReplyObj) => {
+    return ReplyObj
+      .type('image/png')
+      .sendFile('logo.png')
+  })
+
   App.get('/health', async () => {
     return {
       ok: true,
