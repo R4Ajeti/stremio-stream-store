@@ -46,6 +46,8 @@ export const Env = {
 
   FIREBASE_PROJECT_ID: GetRequiredEnv('FIREBASE_PROJECT_ID'),
   FIREBASE_CLIENT_EMAIL: GetRequiredEnv('FIREBASE_CLIENT_EMAIL'),
-  FIREBASE_PRIVATE_KEY: GetRequiredEnv('FIREBASE_PRIVATE_KEY').replace(/\\n/g, '\n'),
+  FIREBASE_PRIVATE_KEY_BASE64: process.env.FIREBASE_PRIVATE_KEY_BASE64_BASE64
+  ? Buffer.from(GetRequiredEnv('FIREBASE_PRIVATE_KEY_BASE64_BASE64'), 'base64').toString('utf-8')
+  : GetRequiredEnv('FIREBASE_PRIVATE_KEY_BASE64').replace(/\\n/g, '\n'),
   FIREBASE_DATABASE_URL: GetRequiredEnv('FIREBASE_DATABASE_URL'),
 }
