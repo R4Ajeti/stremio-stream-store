@@ -1,0 +1,9 @@
+beamup config
+
+Beamup Host: a.baby-beamup.club
+GitHub Username: r4ajeti
+Configuration saved at "/Users/rinorajeti/beamup-config.json"
+
+
+
+
