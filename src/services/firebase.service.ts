@@ -7,7 +7,7 @@ if (!Admin.apps.length) {
     credential: Admin.credential.cert({
       projectId: Env.FIREBASE_PROJECT_ID,
       clientEmail: Env.FIREBASE_CLIENT_EMAIL,
-      privateKey: Env.FIREBASE_PRIVATE_KEY_BASE64,
+      privateKey: Env.FIREBASE_PRIVATE_KEY,
     }),
     databaseURL: Env.FIREBASE_DATABASE_URL,
   })
