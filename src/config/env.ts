@@ -31,13 +31,8 @@ function GetOptionalNumberEnv(NameStr: string, DefaultInt: number): number {
 }
 
 function GetFirebasePrivateKey(): string {
-  const Base64PrivateKeyStr = process.env.FIREBASE_PRIVATE_KEY_BASE64
-
-  if (Base64PrivateKeyStr) {
-    return Buffer.from(Base64PrivateKeyStr, 'base64').toString('utf-8')
-  }
-
-  return GetRequiredEnv('FIREBASE_PRIVATE_KEY').replace(/\\n/g, '\n')
+  const Base64PrivateKeyStr = GetRequiredEnv('FIREBASE_PRIVATE_KEY_BASE64')
+  return Buffer.from(Base64PrivateKeyStr, 'base64').toString('utf-8')
 }
 
 export const Env = {
