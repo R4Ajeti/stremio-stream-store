@@ -296,3 +296,59 @@ PORT=3000
 ```
 
 `PORT` is mostly used for local/Beamup. Vercel does not use a long-running port listener.
+
+
+## Vercel Runtime Logs
+
+If Vercel shows:
+
+```txt
+500: INTERNAL_SERVER_ERROR
+FUNCTION_INVOCATION_FAILED
+```
+
+the build succeeded but the serverless function crashed at runtime.
+
+Check runtime logs in:
+
+```txt
+Vercel Dashboard → Project → Deployments → latest deployment → Functions → api/index → Logs
+```
+
+or:
+
+```bash
+vercel logs https://your-deployment-url.vercel.app
+```
+
+Make sure all production environment variables are set in Vercel:
+
+```env
+FIREBASE_PROJECT_ID=
+FIREBASE_CLIENT_EMAIL=
+FIREBASE_PRIVATE_KEY_BASE64=
+FIREBASE_DATABASE_URL=
+ADDON_BASE_URL=https://your-vercel-domain.vercel.app
+PORT=3000
+```
+
+
+## Final Vercel Fix
+
+Do not use `@fastify/aws-lambda` on Vercel for this project.
+
+The Vercel entrypoint is:
+
+```txt
+api/index.ts
+```
+
+It uses native Node request/response objects and forwards them into Fastify:
+
+```ts
+App.server.emit('request', RequestObj, ReplyObj)
+```
+
+`vercel.json` rewrites all routes to `/api/index`.
+
+If Vercel still shows `@fastify/aws-lambda` in logs, your deployed commit still has the old dependency/import. Remove `node_modules`, regenerate `yarn.lock`, commit, and redeploy without cache.

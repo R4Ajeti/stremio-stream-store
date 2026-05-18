@@ -1,12 +1,27 @@
-import awsLambdaFastify from '@fastify/aws-lambda'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 
 import { BuildApp } from '../src/app.js'
 
-const AppPromise = BuildApp()
+const AppPromise = BuildApp().then(async (App) => {
+  await App.ready()
+  return App
+})
 
-export default async function Handler(RequestObj: unknown, ReplyObj: unknown) {
-  const App = await AppPromise
-  const Proxy = awsLambdaFastify(App)
+export default async function Handler(RequestObj: IncomingMessage, ReplyObj: ServerResponse) {
+  try {
+    const App = await AppPromise
+    App.server.emit('request', RequestObj, ReplyObj)
+  } catch (ErrorObj) {
+    console.error('Vercel handler failed:', ErrorObj)
 
-  return Proxy(RequestObj, ReplyObj)
+    if (!ReplyObj.headersSent) {
+      ReplyObj.statusCode = 500
+      ReplyObj.setHeader('Content-Type', 'application/json')
+    }
+
+    ReplyObj.end(JSON.stringify({
+      ok: false,
+      error: 'Internal Server Error',
+    }))
+  }
 }
