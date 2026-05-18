@@ -50,7 +50,7 @@ const PortInt = GetOptionalNumberEnv('PORT', 3000)
 export const Env = {
   PORT: PortInt,
 
-  ADDON_BASE_URL: GetOptionalEnv('ADDON_BASE_URL', `http://localhost:${PortInt}`),
+  ADDON_BASE_URL: GetRequiredEnv('ADDON_BASE_URL'),
   ADDON_ID: 'org.stremio.stream.store',
   ADDON_NAME: 'Stremio Stream Store',
   ADDON_DESCRIPTION: 'Save and serve custom stream links for movies and TV episodes using IMDb IDs.',
