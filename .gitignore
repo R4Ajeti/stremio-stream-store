@@ -10,6 +10,7 @@ node_modules/
 
 stremio-stream-store*
 commands.txt
+asset*
 
 # Logs
 logs
