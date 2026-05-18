@@ -1,5 +1,3 @@
-export type LinkType = 'movie' | 'serie'
-
 export interface StoredLink {
   url: string
   createdAt: string

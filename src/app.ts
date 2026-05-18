@@ -1,5 +1,4 @@
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 
 import Cors from '@fastify/cors'
 import FormBody from '@fastify/formbody'
@@ -11,9 +10,6 @@ import { LinkRoute } from './routes/link.route.js'
 import { ManifestRoute } from './routes/manifest.route.js'
 import { StreamRoute } from './routes/stream.route.js'
 import { UiRoute } from './routes/ui.route.js'
-
-const FilenameStr = fileURLToPath(import.meta.url)
-const DirnameStr = path.dirname(FilenameStr)
 
 export async function BuildApp() {
   const App = Fastify({
@@ -31,19 +27,15 @@ export async function BuildApp() {
     prefix: '/public/',
   })
 
-  App.get('/favicon.ico', async (_RequestObj, ReplyObj) => {
-    return ReplyObj
-      .type('image/png')
-      .sendFile('logo.png')
-  })
+  App.get('/favicon.ico', async (_RequestObj, ReplyObj) => ReplyObj
+    .type('image/png')
+    .sendFile('logo.png'))
 
-  App.get('/health', async () => {
-    return {
-      ok: true,
-      name: Env.ADDON_NAME,
-      time: new Date().toISOString(),
-    }
-  })
+  App.get('/health', async () => ({
+    ok: true,
+    name: Env.ADDON_NAME,
+    time: new Date().toISOString(),
+  }))
 
   await App.register(UiRoute)
   await App.register(ManifestRoute)

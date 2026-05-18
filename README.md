@@ -1,76 +1,113 @@
 # Stremio Stream Store
 
-Save and serve custom Stremio stream links for movies and TV episodes using IMDb IDs.
+Save and serve one custom Stremio stream link per movie or TV episode using IMDb IDs.
 
 ## Features
 
-- Simple UI for saving movie and TV episode links
-- Firebase Realtime Database storage
-- One active custom stream link per movie
-- One active custom stream link per TV episode
+- Simple browser UI for saving movie and TV episode stream links
+- Firebase Realtime Database storage through Firebase Admin SDK
 - Automatic overwrite when the same movie or episode is saved again
-- Stremio-compatible manifest and stream routes
+- Stremio-compatible manifest and stream endpoints
 - TypeScript + Fastify backend
-- Beamup-ready deployment
+- Compatible with BeamUp-style long-running Node hosting and Vercel serverless functions
 
 ## Project Structure
 
 ```txt
 stremio-stream-store/
+├── api/
+│   └── index.ts              # Vercel serverless entrypoint
+├── public/
+│   ├── logo.png
+│   ├── main.js
+│   └── styles.css
 ├── src/
-│   ├── server.ts
-│   ├── app.ts
+│   ├── app.ts                # Shared Fastify app factory
+│   ├── server.ts             # BeamUp/local Node entrypoint
 │   ├── config/
 │   │   └── env.ts
 │   ├── routes/
+│   │   ├── link.route.ts
 │   │   ├── manifest.route.ts
 │   │   ├── stream.route.ts
-│   │   ├── link.route.ts
 │   │   └── ui.route.ts
 │   ├── services/
 │   │   ├── firebase.service.ts
 │   │   └── link.service.ts
-│   ├── validators/
-│   │   └── link.validator.ts
 │   ├── types/
 │   │   └── link.type.ts
-│   └── utils/
-│       └── date.util.ts
-├── public/
-│   └── index.html
+│   ├── utils/
+│   │   └── response.util.ts
+│   └── validators/
+│       └── link.validator.ts
+├── app.json                  # BeamUp health check config
 ├── package.json
 ├── tsconfig.json
-├── .env.example
-├── .gitignore
+├── vercel.json
 └── README.md
 ```
 
-## Database Structure
+## Required Environment Variables
 
-```json
-{
-  "link": {
-    "movie": {
-      "tt10375396": {
-        "url": "https://example.com/movie-link",
-        "createdAt": "2026-05-17T12:00:00.000Z",
-        "updatedAt": "2026-05-17T12:00:00.000Z"
-      }
-    },
-    "serie": {
-      "tt10375397": {
-        "1": {
-          "2": {
-            "url": "https://example.com/serie-link",
-            "createdAt": "2026-05-17T12:00:00.000Z",
-            "updatedAt": "2026-05-17T12:00:00.000Z"
-          }
-        }
-      }
-    }
-  }
-}
+```env
+ADDON_BASE_URL=https://your-domain.example.com
+FIREBASE_PROJECT_ID=your-firebase-project-id
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk@example.iam.gserviceaccount.com
+FIREBASE_PRIVATE_KEY_BASE64=base64-encoded-private-key
+FIREBASE_DATABASE_URL=https://your-project-default-rtdb.firebaseio.com
+PORT=3000
 ```
+
+`PORT` is required only for local/BeamUp runtime. Vercel injects its own serverless request handling and does not use `PORT`.
+
+### Generate `FIREBASE_PRIVATE_KEY_BASE64`
+
+From your Firebase service account JSON file:
+
+```bash
+node -e "const key=require('./service-account.json').private_key; console.log(Buffer.from(key, 'utf8').toString('base64'))"
+```
+
+## Development
+
+```bash
+yarn install
+yarn dev
+```
+
+Open:
+
+```txt
+http://localhost:3000
+```
+
+## Build and Start
+
+```bash
+yarn build
+yarn start
+```
+
+`yarn build` compiles the BeamUp/local server to `dist/`. Vercel uses `api/index.ts` as the serverless function entrypoint.
+
+## Vercel Deployment Notes
+
+- Keep only one Vercel function entrypoint at `api/index.ts`.
+- Do not commit `api/index.js` beside `api/index.ts`; Vercel treats both as the same route and fails with a conflicting paths error.
+- `vercel.json` rewrites all requests to `/api/index`, where the shared Fastify app handles UI, manifest, stream, health, and API routes.
+- Configure the same Firebase and addon environment variables in Vercel Project Settings.
+- Set `ADDON_BASE_URL` to the deployed Vercel URL or your custom domain so the Stremio manifest logo URL is correct.
+
+## BeamUp Deployment Notes
+
+The BeamUp path remains unchanged:
+
+```bash
+yarn build
+yarn start
+```
+
+`src/server.ts` starts Fastify on `process.env.PORT`, and `app.json` keeps the `/health` health check.
 
 ## Routes
 
@@ -96,9 +133,8 @@ GET /manifest.json
 
 ```http
 POST /api/link/movie
+Content-Type: application/json
 ```
-
-Body:
 
 ```json
 {
@@ -107,19 +143,12 @@ Body:
 }
 ```
 
-Optional header when `ADMIN_TOKEN` is set:
-
-```http
-Authorization: Bearer change-this-token
-```
-
 ### Save Series Episode Link
 
 ```http
 POST /api/link/serie
+Content-Type: application/json
 ```
-
-Body:
 
 ```json
 {
@@ -128,6 +157,18 @@ Body:
   "episode": 2,
   "url": "https://example.com/serie-link"
 }
+```
+
+### Delete Movie Link
+
+```http
+DELETE /api/link/movie/:imdbId
+```
+
+### Delete Series Episode Link
+
+```http
+DELETE /api/link/serie/:imdbId/:season/:episode
 ```
 
 ### Stremio Movie Stream
@@ -160,195 +201,39 @@ Example:
 GET /stream/series/tt10375397%3A1%3A2.json
 ```
 
-## Setup
+Alternative route kept for compatibility:
 
-```bash
-yarn install
-cp .env.example .env
+```http
+GET /stream/series/:imdbId/:season/:episode.json
 ```
 
-Fill Firebase values in `.env`.
+## Database Structure
 
-## Development
-
-```bash
-yarn dev
-```
-
-Open:
-
-```txt
-http://localhost:3000
-```
-
-Manifest URL:
-
-```txt
-http://localhost:3000/manifest.json
-```
-
-## Build
-
-```bash
-yarn build
-```
-
-## Start
-
-```bash
-yarn start
-```
-
-## Beamup Notes
-
-The app listens on `process.env.PORT`, so it is ready for Beamup-style deployment.
-
-Set all required environment variables on your host:
-
-```txt
-ADDON_BASE_URL
-ADMIN_TOKEN
-FIREBASE_PROJECT_ID
-FIREBASE_CLIENT_EMAIL
-FIREBASE_PRIVATE_KEY_BASE64
-FIREBASE_DATABASE_URL
+```json
+{
+  "link": {
+    "movie": {
+      "tt10375396": {
+        "url": "https://example.com/movie-link",
+        "createdAt": "2026-05-17T12:00:00.000Z",
+        "updatedAt": "2026-05-17T12:00:00.000Z"
+      }
+    },
+    "serie": {
+      "tt10375397": {
+        "1": {
+          "2": {
+            "url": "https://example.com/serie-link",
+            "createdAt": "2026-05-17T12:00:00.000Z",
+            "updatedAt": "2026-05-17T12:00:00.000Z"
+          }
+        }
+      }
+    }
+  }
+}
 ```
 
 ## Security
 
-The UI sends requests to your backend. Firebase Admin SDK is used only on the backend.
-
-If `ADMIN_TOKEN` is configured, save/update API calls require:
-
-```http
-Authorization: Bearer YOUR_ADMIN_TOKEN
-```
-
-or the UI token field.
-
-## License
-
-MIT
-
-
-## Supported Environment Variables
-
-This project supports only these environment variables:
-
-```env
-FIREBASE_PROJECT_ID=
-FIREBASE_CLIENT_EMAIL=
-FIREBASE_PRIVATE_KEY_BASE64=
-FIREBASE_DATABASE_URL=
-ADDON_BASE_URL=
-PORT=
-```
-
-### Generate `FIREBASE_PRIVATE_KEY_BASE64`
-
-From your Firebase service account JSON file:
-
-```bash
-node -e "const key=require('./service-account.json').private_key; console.log(Buffer.from(key, 'utf8').toString('base64'))"
-```
-
-Then set it on Beamup:
-
-```bash
-beamup secrets FIREBASE_PRIVATE_KEY_BASE64 "PASTE_BASE64_VALUE_HERE"
-```
-
-Do not set `FIREBASE_PRIVATE_KEY` or `FIREBASE_SERVICE_ACCOUNT_BASE64`; they are not used by this project.
-
-
-## Vercel Deployment
-
-This project includes a Vercel serverless entrypoint:
-
-```txt
-api/index.ts
-```
-
-and a rewrite config:
-
-```txt
-vercel.json
-```
-
-Vercel routes all requests to the Fastify app, so these URLs work:
-
-```txt
-/
-/manifest.json
-/stream/movie/:imdbId.json
-/stream/series/:id.json
-```
-
-Set these environment variables in Vercel:
-
-```env
-FIREBASE_PROJECT_ID=
-FIREBASE_CLIENT_EMAIL=
-FIREBASE_PRIVATE_KEY_BASE64=
-FIREBASE_DATABASE_URL=
-ADDON_BASE_URL=https://your-vercel-domain.vercel.app
-PORT=3000
-```
-
-`PORT` is mostly used for local/Beamup. Vercel does not use a long-running port listener.
-
-
-## Vercel Runtime Logs
-
-If Vercel shows:
-
-```txt
-500: INTERNAL_SERVER_ERROR
-FUNCTION_INVOCATION_FAILED
-```
-
-the build succeeded but the serverless function crashed at runtime.
-
-Check runtime logs in:
-
-```txt
-Vercel Dashboard → Project → Deployments → latest deployment → Functions → api/index → Logs
-```
-
-or:
-
-```bash
-vercel logs https://your-deployment-url.vercel.app
-```
-
-Make sure all production environment variables are set in Vercel:
-
-```env
-FIREBASE_PROJECT_ID=
-FIREBASE_CLIENT_EMAIL=
-FIREBASE_PRIVATE_KEY_BASE64=
-FIREBASE_DATABASE_URL=
-ADDON_BASE_URL=https://your-vercel-domain.vercel.app
-PORT=3000
-```
-
-
-## Final Vercel Fix
-
-Do not use `@fastify/aws-lambda` on Vercel for this project.
-
-The Vercel entrypoint is:
-
-```txt
-api/index.ts
-```
-
-It uses native Node request/response objects and forwards them into Fastify:
-
-```ts
-App.server.emit('request', RequestObj, ReplyObj)
-```
-
-`vercel.json` rewrites all routes to `/api/index`.
-
-If Vercel still shows `@fastify/aws-lambda` in logs, your deployed commit still has the old dependency/import. Remove `node_modules`, regenerate `yarn.lock`, commit, and redeploy without cache.
+Firebase Admin SDK is used only on the backend. Do not expose Firebase service account values in frontend code.

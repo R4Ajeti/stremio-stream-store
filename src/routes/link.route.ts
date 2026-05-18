@@ -1,5 +1,5 @@
-import type { FastifyInstance } from 'fastify'
-import { ZodError } from 'zod'
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
+import type { ZodSchema } from 'zod'
 
 import {
   DeleteMovieLink,
@@ -13,103 +13,74 @@ import {
   SerieLinkSchema,
   SerieStreamParamSchema,
 } from '../validators/link.validator.js'
+import { ErrorBody, GetValidationErrorMessage, IsValidationError } from '../utils/response.util.js'
+
+type RequestHandler<TInput, TResult> = (InputObj: TInput) => Promise<TResult>
+
+async function HandleRequest<TInput, TResult>(
+  RequestObj: FastifyRequest,
+  ReplyObj: FastifyReply,
+  SchemaObj: ZodSchema<TInput>,
+  InputObj: unknown,
+  FailureMessageStr: string,
+  HandlerObj: RequestHandler<TInput, TResult>,
+) {
+  try {
+    const ParsedObj = SchemaObj.parse(InputObj)
+    const ResultObj = await HandlerObj(ParsedObj)
+
+    return {
+      ok: true,
+      ...(ResultObj && typeof ResultObj === 'object' ? ResultObj : {}),
+    }
+  } catch (ErrorObj) {
+    if (IsValidationError(ErrorObj)) {
+      return ReplyObj.status(400).send(ErrorBody(GetValidationErrorMessage(ErrorObj)))
+    }
+
+    RequestObj.log.error(ErrorObj)
+    return ReplyObj.status(500).send(ErrorBody(FailureMessageStr))
+  }
+}
 
 export async function LinkRoute(App: FastifyInstance) {
-  App.post('/movie', async (RequestObj, ReplyObj) => {
-    try {
-      const BodyObj = MovieLinkSchema.parse(RequestObj.body)
-      const ResultObj = await SaveMovieLink(BodyObj)
+  App.post('/movie', async (RequestObj, ReplyObj) => HandleRequest(
+    RequestObj,
+    ReplyObj,
+    MovieLinkSchema,
+    RequestObj.body,
+    'Failed to save movie link',
+    SaveMovieLink,
+  ))
 
-      return {
-        ok: true,
-        ...ResultObj,
-      }
-    } catch (ErrorObj) {
-      if (ErrorObj instanceof ZodError) {
-        return ReplyObj.status(400).send({
-          ok: false,
-          error: ErrorObj.errors[0]?.message || 'Invalid request',
-        })
-      }
+  App.post('/serie', async (RequestObj, ReplyObj) => HandleRequest(
+    RequestObj,
+    ReplyObj,
+    SerieLinkSchema,
+    RequestObj.body,
+    'Failed to save series link',
+    SaveSerieLink,
+  ))
 
-      RequestObj.log.error(ErrorObj)
-      return ReplyObj.status(500).send({
-        ok: false,
-        error: 'Failed to save movie link',
-      })
-    }
-  })
-
-  App.post('/serie', async (RequestObj, ReplyObj) => {
-    try {
-      const BodyObj = SerieLinkSchema.parse(RequestObj.body)
-      const ResultObj = await SaveSerieLink(BodyObj)
-
-      return {
-        ok: true,
-        ...ResultObj,
-      }
-    } catch (ErrorObj) {
-      if (ErrorObj instanceof ZodError) {
-        return ReplyObj.status(400).send({
-          ok: false,
-          error: ErrorObj.errors[0]?.message || 'Invalid request',
-        })
-      }
-
-      RequestObj.log.error(ErrorObj)
-      return ReplyObj.status(500).send({
-        ok: false,
-        error: 'Failed to save series link',
-      })
-    }
-  })
-
-  App.delete('/movie/:imdbId', async (RequestObj, ReplyObj) => {
-    try {
-      const ParamsObj = ImdbIdParamSchema.parse(RequestObj.params)
+  App.delete('/movie/:imdbId', async (RequestObj, ReplyObj) => HandleRequest(
+    RequestObj,
+    ReplyObj,
+    ImdbIdParamSchema,
+    RequestObj.params,
+    'Failed to delete movie link',
+    async (ParamsObj) => {
       await DeleteMovieLink(ParamsObj.imdbId)
+    },
+  ))
 
-      return {
-        ok: true,
-      }
-    } catch (ErrorObj) {
-      if (ErrorObj instanceof ZodError) {
-        return ReplyObj.status(400).send({
-          ok: false,
-          error: ErrorObj.errors[0]?.message || 'Invalid request',
-        })
-      }
-
-      RequestObj.log.error(ErrorObj)
-      return ReplyObj.status(500).send({
-        ok: false,
-        error: 'Failed to delete movie link',
-      })
-    }
-  })
-
-  App.delete('/serie/:imdbId/:season/:episode', async (RequestObj, ReplyObj) => {
-    try {
-      const ParamsObj = SerieStreamParamSchema.parse(RequestObj.params)
+  App.delete('/serie/:imdbId/:season/:episode', async (RequestObj, ReplyObj) => HandleRequest(
+    RequestObj,
+    ReplyObj,
+    SerieStreamParamSchema,
+    RequestObj.params,
+    'Failed to delete series link',
+    async (ParamsObj) => {
       await DeleteSerieLink(ParamsObj.imdbId, ParamsObj.season, ParamsObj.episode)
-
-      return {
-        ok: true,
-      }
-    } catch (ErrorObj) {
-      if (ErrorObj instanceof ZodError) {
-        return ReplyObj.status(400).send({
-          ok: false,
-          error: ErrorObj.errors[0]?.message || 'Invalid request',
-        })
-      }
-
-      RequestObj.log.error(ErrorObj)
-      return ReplyObj.status(500).send({
-        ok: false,
-        error: 'Failed to delete series link',
-      })
-    }
-  })
+    },
+  ))
 }

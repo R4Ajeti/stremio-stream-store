@@ -1,23 +1,20 @@
-import type { FastifyInstance } from 'fastify'
-import { ZodError, z } from 'zod'
+import type { FastifyInstance, FastifyReply } from 'fastify'
+import { z } from 'zod'
 
-import { GetMovieLink, GetSerieLink } from '../services/link.service.js'
-import { ImdbIdParamSchema } from '../validators/link.validator.js'
 import type { StremioStreamResponse } from '../types/link.type.js'
+import { GetMovieLink, GetSerieLink } from '../services/link.service.js'
+import { GetValidationErrorMessage, IsValidationError } from '../utils/response.util.js'
+import { ImdbIdParamSchema, ImdbIdRegex, SerieStreamParamSchema } from '../validators/link.validator.js'
 
-function SetNoCacheHeaders(ReplyObj: { header: (NameStr: string, ValueStr: string) => unknown }): void {
-  ReplyObj.header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
-  ReplyObj.header('Pragma', 'no-cache')
-  ReplyObj.header('Expires', '0')
-  ReplyObj.header('Surrogate-Control', 'no-store')
+interface SeriesStreamParams {
+  imdbId: string
+  season: number
+  episode: number
 }
-
 
 const StremioIdParamSchema = z.object({
   id: z.string().trim().min(1, 'Stremio ID is required'),
 })
-
-const ImdbIdRegex = /^tt\d{7,10}$/
 
 function EmptyStreamResponse(): StremioStreamResponse {
   return {
@@ -36,21 +33,21 @@ function LinkToStreamResponse(UrlStr: string): StremioStreamResponse {
   }
 }
 
-function ParseSeriesStremioId(IdStr: string): {
-  imdbId: string
-  season: number
-  episode: number
-} {
-  const DecodedIdStr = decodeURIComponent(IdStr)
-  const PartList = DecodedIdStr.split(':')
+function SetNoCacheHeaders(ReplyObj: FastifyReply): void {
+  ReplyObj.header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+  ReplyObj.header('Pragma', 'no-cache')
+  ReplyObj.header('Expires', '0')
+  ReplyObj.header('Surrogate-Control', 'no-store')
+}
 
-  if (PartList.length !== 3) {
-    throw new Error('Series stream ID must use format tt1234567:season:episode')
-  }
-
-  const [ImdbIdStr, SeasonStr, EpisodeStr] = PartList
+function ParseSeriesStremioId(IdStr: string): SeriesStreamParams {
+  const [ImdbIdStr, SeasonStr, EpisodeStr] = decodeURIComponent(IdStr).split(':')
   const SeasonInt = Number(SeasonStr)
   const EpisodeInt = Number(EpisodeStr)
+
+  if (!ImdbIdStr || !SeasonStr || !EpisodeStr) {
+    throw new Error('Series stream ID must use format tt1234567:season:episode')
+  }
 
   if (!ImdbIdRegex.test(ImdbIdStr)) {
     throw new Error('IMDb ID must look like tt1234567')
@@ -71,23 +68,25 @@ function ParseSeriesStremioId(IdStr: string): {
   }
 }
 
+async function BuildSeriesStreamResponse(ParamsObj: SeriesStreamParams): Promise<StremioStreamResponse> {
+  const LinkObj = await GetSerieLink(ParamsObj.imdbId, ParamsObj.season, ParamsObj.episode)
+  return LinkObj ? LinkToStreamResponse(LinkObj.url) : EmptyStreamResponse()
+}
+
 export async function StreamRoute(App: FastifyInstance) {
   App.get('/stream/movie/:imdbId.json', async (RequestObj, ReplyObj) => {
     SetNoCacheHeaders(ReplyObj)
+
     try {
       const ParamsObj = ImdbIdParamSchema.parse(RequestObj.params)
       const LinkObj = await GetMovieLink(ParamsObj.imdbId)
 
-      if (!LinkObj) {
-        return EmptyStreamResponse()
-      }
-
-      return LinkToStreamResponse(LinkObj.url)
+      return LinkObj ? LinkToStreamResponse(LinkObj.url) : EmptyStreamResponse()
     } catch (ErrorObj) {
-      if (ErrorObj instanceof ZodError) {
+      if (IsValidationError(ErrorObj)) {
         return ReplyObj.status(400).send({
-          streams: [],
-          error: ErrorObj.errors[0]?.message || 'Invalid request',
+          ...EmptyStreamResponse(),
+          error: GetValidationErrorMessage(ErrorObj),
         })
       }
 
@@ -98,27 +97,21 @@ export async function StreamRoute(App: FastifyInstance) {
 
   App.get('/stream/series/:id.json', async (RequestObj, ReplyObj) => {
     SetNoCacheHeaders(ReplyObj)
+
     try {
       const ParamsObj = StremioIdParamSchema.parse(RequestObj.params)
-      const ParsedObj = ParseSeriesStremioId(ParamsObj.id)
-      const LinkObj = await GetSerieLink(ParsedObj.imdbId, ParsedObj.season, ParsedObj.episode)
-
-      if (!LinkObj) {
-        return EmptyStreamResponse()
-      }
-
-      return LinkToStreamResponse(LinkObj.url)
+      return BuildSeriesStreamResponse(ParseSeriesStremioId(ParamsObj.id))
     } catch (ErrorObj) {
-      if (ErrorObj instanceof ZodError) {
+      if (IsValidationError(ErrorObj)) {
         return ReplyObj.status(400).send({
-          streams: [],
-          error: ErrorObj.errors[0]?.message || 'Invalid request',
+          ...EmptyStreamResponse(),
+          error: GetValidationErrorMessage(ErrorObj),
         })
       }
 
       if (ErrorObj instanceof Error) {
         return ReplyObj.status(400).send({
-          streams: [],
+          ...EmptyStreamResponse(),
           error: ErrorObj.message,
         })
       }
@@ -130,25 +123,15 @@ export async function StreamRoute(App: FastifyInstance) {
 
   App.get('/stream/series/:imdbId/:season/:episode.json', async (RequestObj, ReplyObj) => {
     SetNoCacheHeaders(ReplyObj)
+
     try {
-      const ParamsObj = z.object({
-        imdbId: z.string().trim().regex(ImdbIdRegex, 'IMDb ID must look like tt1234567'),
-        season: z.coerce.number().int().positive('Season must be a positive number'),
-        episode: z.coerce.number().int().positive('Episode must be a positive number'),
-      }).parse(RequestObj.params)
-
-      const LinkObj = await GetSerieLink(ParamsObj.imdbId, ParamsObj.season, ParamsObj.episode)
-
-      if (!LinkObj) {
-        return EmptyStreamResponse()
-      }
-
-      return LinkToStreamResponse(LinkObj.url)
+      const ParamsObj = SerieStreamParamSchema.parse(RequestObj.params)
+      return BuildSeriesStreamResponse(ParamsObj)
     } catch (ErrorObj) {
-      if (ErrorObj instanceof ZodError) {
+      if (IsValidationError(ErrorObj)) {
         return ReplyObj.status(400).send({
-          streams: [],
-          error: ErrorObj.errors[0]?.message || 'Invalid request',
+          ...EmptyStreamResponse(),
+          error: GetValidationErrorMessage(ErrorObj),
         })
       }
 
