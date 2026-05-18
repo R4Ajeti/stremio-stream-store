@@ -259,3 +259,40 @@ beamup secrets FIREBASE_PRIVATE_KEY_BASE64 "PASTE_BASE64_VALUE_HERE"
 ```
 
 Do not set `FIREBASE_PRIVATE_KEY` or `FIREBASE_SERVICE_ACCOUNT_BASE64`; they are not used by this project.
+
+
+## Vercel Deployment
+
+This project includes a Vercel serverless entrypoint:
+
+```txt
+api/index.ts
+```
+
+and a rewrite config:
+
+```txt
+vercel.json
+```
+
+Vercel routes all requests to the Fastify app, so these URLs work:
+
+```txt
+/
+/manifest.json
+/stream/movie/:imdbId.json
+/stream/series/:id.json
+```
+
+Set these environment variables in Vercel:
+
+```env
+FIREBASE_PROJECT_ID=
+FIREBASE_CLIENT_EMAIL=
+FIREBASE_PRIVATE_KEY_BASE64=
+FIREBASE_DATABASE_URL=
+ADDON_BASE_URL=https://your-vercel-domain.vercel.app
+PORT=3000
+```
+
+`PORT` is mostly used for local/Beamup. Vercel does not use a long-running port listener.

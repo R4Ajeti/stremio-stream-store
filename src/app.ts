@@ -27,7 +27,7 @@ export async function BuildApp() {
   await App.register(FormBody)
 
   await App.register(Static, {
-    root: path.join(DirnameStr, '..', 'public'),
+    root: path.join(process.cwd(), 'public'),
     prefix: '/public/',
   })
 
