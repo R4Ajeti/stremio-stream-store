@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 
 export async function UiRoute(App: FastifyInstance) {
-  App.get('/', async (_RequestObj, ReplyObj) => {
+  App.get('/set', async (_RequestObj, ReplyObj) => {
     return ReplyObj.type('text/html').send(`<!doctype html>
 <html lang="en">
 <head>
