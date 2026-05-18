@@ -1,6 +1,6 @@
 {
   "name": "stremio-stream-store",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Save and serve custom Stremio stream links for movies and TV episodes using IMDb IDs.",
   "main": "dist/server.js",
   "type": "module",
