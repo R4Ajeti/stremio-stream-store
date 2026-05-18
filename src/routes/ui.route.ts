@@ -6,7 +6,7 @@ export async function UiRoute(App: FastifyInstance) {
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Stremio Stream Store</title>
   <link rel="icon" type="image/png" href="/favicon.ico" />
   <link rel="apple-touch-icon" href="/public/logo.png" />
@@ -18,11 +18,11 @@ export async function UiRoute(App: FastifyInstance) {
       <div class="logo">▶</div>
       <div>
         <h1>Stremio Stream Store</h1>
-        <p>Save one custom stream link per movie or TV episode using IMDb IDs.</p>
+        <p>Save one custom playable stream link per movie or TV episode using IMDb IDs.</p>
       </div>
     </section>
 
-    <section class="card">
+    <section class="card install-card">
       <h2>Install Addon</h2>
       <p>Use this manifest URL in Stremio:</p>
       <code id="manifestUrl"></code>
@@ -34,12 +34,12 @@ export async function UiRoute(App: FastifyInstance) {
 
         <label>
           IMDb ID
-          <input name="imdbId" required placeholder="tt10375396" />
+          <input name="imdbId" required placeholder="tt1234567" autocomplete="off" />
         </label>
 
         <label>
           Stream URL
-          <input name="url" required placeholder="https://example.com/movie-link" />
+          <input name="url" required placeholder="https://example.com/movie.mp4" autocomplete="off" />
         </label>
 
         <button type="submit">Save Movie</button>
@@ -51,7 +51,7 @@ export async function UiRoute(App: FastifyInstance) {
 
         <label>
           IMDb ID
-          <input name="imdbId" required placeholder="tt10375397" />
+          <input name="imdbId" required placeholder="tt1234567" autocomplete="off" />
         </label>
 
         <div class="row">
@@ -68,7 +68,7 @@ export async function UiRoute(App: FastifyInstance) {
 
         <label>
           Stream URL
-          <input name="url" required placeholder="https://example.com/serie-link" />
+          <input name="url" required placeholder="https://example.com/episode.mp4" autocomplete="off" />
         </label>
 
         <button type="submit">Save Episode</button>

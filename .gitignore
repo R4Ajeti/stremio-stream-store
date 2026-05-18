@@ -56,3 +56,5 @@ temp/
 # Misc
 *.swp
 *.zip
+.vercel
+.env*.local

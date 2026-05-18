@@ -1,22 +1,21 @@
 {
   "name": "stremio-stream-store",
-  "version": "1.0.1",
-  "description": "Save and serve custom Stremio stream links for movies and TV episodes using IMDb IDs.",
-  "main": "dist/server.js",
+  "version": "1.0.0",
+  "description": "A Stremio addon for saving and serving one custom stream link per movie or TV episode.",
   "type": "module",
+  "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "yarn clean && tsc",
+    "build": "tsc",
     "start": "node dist/server.js",
-    "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist"
+    "typecheck": "tsc --noEmit"
   },
   "keywords": [
     "stremio",
     "stremio-addon",
     "fastify",
     "firebase",
-    "streaming"
+    "vercel"
   ],
   "author": "",
   "license": "MIT",
@@ -35,6 +34,6 @@
     "typescript": "^5.5.3"
   },
   "engines": {
-    "node": "24.x"
+    "node": ">=20"
   }
 }

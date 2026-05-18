@@ -1,31 +1,29 @@
-export interface StoredLink {
+export type StoredLink = {
   url: string
   createdAt: string
   updatedAt: string
 }
 
-export interface MovieLinkRequest {
+export type MovieLinkRequest = {
   imdbId: string
   url: string
 }
 
-export interface SerieLinkRequest {
+export type SerieLinkRequest = {
   imdbId: string
   season: number
   episode: number
   url: string
 }
 
-export interface SaveLinkResult {
+export type SaveLinkResult = {
   path: string
   link: StoredLink
 }
 
-export interface StremioStream {
-  title: string
-  url: string
-}
-
-export interface StremioStreamResponse {
-  streams: StremioStream[]
+export type StremioStreamResponse = {
+  streams: Array<{
+    title: string
+    url: string
+  }>
 }

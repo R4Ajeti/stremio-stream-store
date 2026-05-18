@@ -77,6 +77,10 @@ p {
   box-shadow: 0 24px 90px rgba(0, 0, 0, 0.26);
 }
 
+.install-card {
+  margin-bottom: 18px;
+}
+
 label {
   display: grid;
   gap: 8px;

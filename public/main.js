@@ -1,33 +1,33 @@
 const ManifestElement = document.getElementById('manifestUrl')
 ManifestElement.textContent = `${window.location.origin}/manifest.json`
 
-async function SubmitJson(path, payload, resultId) {
-  const ResultElement = document.getElementById(resultId)
+async function SubmitJson(PathStr, PayloadObj, ResultIdStr) {
+  const ResultElement = document.getElementById(ResultIdStr)
+  ResultElement.textContent = 'Saving...'
+  ResultElement.className = ''
 
   try {
-    const Headers = {
-      'Content-Type': 'application/json',
-    }
-
-    const Response = await fetch(path, {
+    const ResponseObj = await fetch(PathStr, {
       method: 'POST',
-      headers: Headers,
-      body: JSON.stringify(payload),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(PayloadObj),
     })
 
-    const Data = await Response.json()
-    ResultElement.textContent = JSON.stringify(Data, null, 2)
-    ResultElement.className = Response.ok ? 'success' : 'error'
+    const DataObj = await ResponseObj.json()
+    ResultElement.textContent = JSON.stringify(DataObj, null, 2)
+    ResultElement.className = ResponseObj.ok ? 'success' : 'error'
   } catch (ErrorObj) {
     ResultElement.textContent = ErrorObj instanceof Error ? ErrorObj.message : 'Unexpected error'
     ResultElement.className = 'error'
   }
 }
 
-document.getElementById('movieForm').addEventListener('submit', async (Event) => {
-  Event.preventDefault()
+document.getElementById('movieForm').addEventListener('submit', async (EventObj) => {
+  EventObj.preventDefault()
 
-  const FormDataObj = new FormData(Event.target)
+  const FormDataObj = new FormData(EventObj.target)
 
   await SubmitJson('/api/link/movie', {
     imdbId: FormDataObj.get('imdbId'),
@@ -35,10 +35,10 @@ document.getElementById('movieForm').addEventListener('submit', async (Event) =>
   }, 'movieResult')
 })
 
-document.getElementById('serieForm').addEventListener('submit', async (Event) => {
-  Event.preventDefault()
+document.getElementById('serieForm').addEventListener('submit', async (EventObj) => {
+  EventObj.preventDefault()
 
-  const FormDataObj = new FormData(Event.target)
+  const FormDataObj = new FormData(EventObj.target)
 
   await SubmitJson('/api/link/serie', {
     imdbId: FormDataObj.get('imdbId'),

@@ -1,12 +1,12 @@
 {
+  "name": "stremio-stream-store",
+  "description": "Save and serve custom Stremio stream links using Firebase Realtime Database.",
   "healthchecks": {
     "web": [
       {
         "type": "http",
-        "path": "/health",
-        "attempts": 3,
-        "timeout": 5,
-        "wait": 5
+        "name": "health",
+        "path": "/health"
       }
     ]
   }

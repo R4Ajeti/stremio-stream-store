@@ -1,29 +1,42 @@
 # Stremio Stream Store
 
-Save and serve one custom Stremio stream link per movie or TV episode using IMDb IDs.
+A TypeScript/Fastify Stremio addon that lets you save and serve one custom playable stream link per movie or TV episode using IMDb IDs.
 
-## Features
+## What it does
 
-- Simple browser UI for saving movie and TV episode stream links
-- Firebase Realtime Database storage through Firebase Admin SDK
-- Automatic overwrite when the same movie or episode is saved again
-- Stremio-compatible manifest and stream endpoints
-- TypeScript + Fastify backend
-- Compatible with BeamUp-style long-running Node hosting and Vercel serverless functions
+- Provides a simple web UI at `/`
+- Saves movie links by IMDb ID
+- Saves TV episode links by IMDb ID, season, and episode
+- Stores data in Firebase Realtime Database
+- Overwrites the existing saved link when the same movie or episode is submitted again
+- Preserves `createdAt` and updates `updatedAt`
+- Exposes Stremio-compatible manifest and stream routes
+- Returns stream links with `url`, not `externalUrl`, so Stremio can play them instead of opening the browser
+- Keeps manifest cacheable, but disables cache only for stream routes
+- Works locally as a normal Fastify server and on Vercel as a serverless app
 
-## Project Structure
+## Stack
+
+- TypeScript
+- Node.js
+- Fastify
+- Firebase Realtime Database
+- Simple HTML/CSS/JavaScript UI
+- Vercel serverless entrypoint
+
+## Project structure
 
 ```txt
 stremio-stream-store/
 ├── api/
-│   └── index.ts              # Vercel serverless entrypoint
+│   └── index.ts
 ├── public/
 │   ├── logo.png
 │   ├── main.js
 │   └── styles.css
 ├── src/
-│   ├── app.ts                # Shared Fastify app factory
-│   ├── server.ts             # BeamUp/local Node entrypoint
+│   ├── app.ts
+│   ├── server.ts
 │   ├── config/
 │   │   └── env.ts
 │   ├── routes/
@@ -37,38 +50,84 @@ stremio-stream-store/
 │   ├── types/
 │   │   └── link.type.ts
 │   ├── utils/
-│   │   └── response.util.ts
+│   │   └── date.util.ts
 │   └── validators/
 │       └── link.validator.ts
-├── app.json                  # BeamUp health check config
+├── app.json
 ├── package.json
 ├── tsconfig.json
 ├── vercel.json
+├── .env.example
+├── .gitignore
 └── README.md
 ```
 
-## Required Environment Variables
+## Firebase database structure
 
-```env
-ADDON_BASE_URL=https://your-domain.example.com
-FIREBASE_PROJECT_ID=your-firebase-project-id
-FIREBASE_CLIENT_EMAIL=firebase-adminsdk@example.iam.gserviceaccount.com
-FIREBASE_PRIVATE_KEY_BASE64=base64-encoded-private-key
-FIREBASE_DATABASE_URL=https://your-project-default-rtdb.firebaseio.com
-PORT=3000
+```json
+{
+  "link": {
+    "movie": {
+      "tt1234567": {
+        "url": "https://example.com/movie.mp4",
+        "createdAt": "2026-05-18T12:00:00.000Z",
+        "updatedAt": "2026-05-18T12:10:00.000Z"
+      }
+    },
+    "serie": {
+      "tt1234567": {
+        "1": {
+          "2": {
+            "url": "https://example.com/episode.mp4",
+            "createdAt": "2026-05-18T12:00:00.000Z",
+            "updatedAt": "2026-05-18T12:10:00.000Z"
+          }
+        }
+      }
+    }
+  }
+}
 ```
 
-`PORT` is required only for local/BeamUp runtime. Vercel injects its own serverless request handling and does not use `PORT`.
+## Environment variables
 
-### Generate `FIREBASE_PRIVATE_KEY_BASE64`
+Only these envs are supported:
 
-From your Firebase service account JSON file:
+```txt
+FIREBASE_PROJECT_ID
+FIREBASE_CLIENT_EMAIL
+FIREBASE_PRIVATE_KEY_BASE64
+FIREBASE_DATABASE_URL
+ADDON_BASE_URL
+PORT
+```
+
+Copy the example file:
 
 ```bash
-node -e "const key=require('./service-account.json').private_key; console.log(Buffer.from(key, 'utf8').toString('base64'))"
+cp .env.example .env
 ```
 
-## Development
+### Encode Firebase private key
+
+Use the PEM private key from your Firebase service account JSON and encode it as base64.
+
+```bash
+printf '%s' '-----BEGIN PRIVATE KEY-----
+YOUR_KEY_HERE
+-----END PRIVATE KEY-----
+' | base64
+```
+
+Then paste the output into:
+
+```txt
+FIREBASE_PRIVATE_KEY_BASE64=...
+```
+
+Raw `FIREBASE_PRIVATE_KEY` is intentionally not supported.
+
+## Local development
 
 ```bash
 yarn install
@@ -81,33 +140,46 @@ Open:
 http://localhost:3000
 ```
 
-## Build and Start
+Manifest URL:
+
+```txt
+http://localhost:3000/manifest.json
+```
+
+## Build and run
 
 ```bash
 yarn build
 yarn start
 ```
 
-`yarn build` compiles the BeamUp/local server to `dist/`. Vercel uses `api/index.ts` as the serverless function entrypoint.
+The local server listens on:
 
-## Vercel Deployment Notes
-
-- Keep only one Vercel function entrypoint at `api/index.ts`.
-- Do not commit `api/index.js` beside `api/index.ts`; Vercel treats both as the same route and fails with a conflicting paths error.
-- `vercel.json` rewrites all requests to `/api/index`, where the shared Fastify app handles UI, manifest, stream, health, and API routes.
-- Configure the same Firebase and addon environment variables in Vercel Project Settings.
-- Set `ADDON_BASE_URL` to the deployed Vercel URL or your custom domain so the Stremio manifest logo URL is correct.
-
-## BeamUp Deployment Notes
-
-The BeamUp path remains unchanged:
-
-```bash
-yarn build
-yarn start
+```ts
+process.env.PORT
+0.0.0.0
 ```
 
-`src/server.ts` starts Fastify on `process.env.PORT`, and `app.json` keeps the `/health` health check.
+## Vercel deployment
+
+This project includes:
+
+- `api/index.ts` as the Vercel serverless entrypoint
+- `vercel.json` to rewrite every route to the Fastify handler
+- `public/` static assets
+
+Set these environment variables in Vercel:
+
+```txt
+FIREBASE_PROJECT_ID
+FIREBASE_CLIENT_EMAIL
+FIREBASE_PRIVATE_KEY_BASE64
+FIREBASE_DATABASE_URL
+ADDON_BASE_URL=https://your-vercel-domain.vercel.app
+PORT=3000
+```
+
+`PORT` is mainly used for local/server hosting. Vercel handles the actual serverless runtime port internally.
 
 ## Routes
 
@@ -117,7 +189,7 @@ yarn start
 GET /
 ```
 
-### Health Check
+### Health
 
 ```http
 GET /health
@@ -129,49 +201,53 @@ GET /health
 GET /manifest.json
 ```
 
-### Save Movie Link
+The manifest logo is generated as:
+
+```ts
+`${Env.ADDON_BASE_URL}/public/logo.png`
+```
+
+Manifest cache is not disabled.
+
+### Save movie link
 
 ```http
 POST /api/link/movie
 Content-Type: application/json
-```
 
-```json
 {
-  "imdbId": "tt10375396",
-  "url": "https://example.com/movie-link"
+  "imdbId": "tt1234567",
+  "url": "https://example.com/movie.mp4"
 }
 ```
 
-### Save Series Episode Link
+Stored at:
+
+```txt
+link/movie/{imdbId}
+```
+
+### Save series episode link
 
 ```http
 POST /api/link/serie
 Content-Type: application/json
-```
 
-```json
 {
-  "imdbId": "tt10375397",
+  "imdbId": "tt1234567",
   "season": 1,
   "episode": 2,
-  "url": "https://example.com/serie-link"
+  "url": "https://example.com/episode.mp4"
 }
 ```
 
-### Delete Movie Link
+Stored at:
 
-```http
-DELETE /api/link/movie/:imdbId
+```txt
+link/serie/{imdbId}/{season}/{episode}
 ```
 
-### Delete Series Episode Link
-
-```http
-DELETE /api/link/serie/:imdbId/:season/:episode
-```
-
-### Stremio Movie Stream
+### Movie stream
 
 ```http
 GET /stream/movie/:imdbId.json
@@ -180,60 +256,89 @@ GET /stream/movie/:imdbId.json
 Example:
 
 ```http
-GET /stream/movie/tt10375396.json
+GET /stream/movie/tt1234567.json
 ```
 
-### Stremio Series Stream
+### Series stream, Stremio format
 
 ```http
 GET /stream/series/:id.json
 ```
 
-Stremio sends series IDs in this format:
+Where `id` is:
 
 ```txt
-tt10375397:1:2
+ttid:season:episode
 ```
 
 Example:
 
 ```http
-GET /stream/series/tt10375397%3A1%3A2.json
+GET /stream/series/tt1234567:1:2.json
 ```
 
-Alternative route kept for compatibility:
+### Series stream, path format
 
 ```http
 GET /stream/series/:imdbId/:season/:episode.json
 ```
 
-## Database Structure
+Example:
+
+```http
+GET /stream/series/tt1234567/1/2.json
+```
+
+## Stream response format
+
+When a saved link exists:
 
 ```json
 {
-  "link": {
-    "movie": {
-      "tt10375396": {
-        "url": "https://example.com/movie-link",
-        "createdAt": "2026-05-17T12:00:00.000Z",
-        "updatedAt": "2026-05-17T12:00:00.000Z"
-      }
-    },
-    "serie": {
-      "tt10375397": {
-        "1": {
-          "2": {
-            "url": "https://example.com/serie-link",
-            "createdAt": "2026-05-17T12:00:00.000Z",
-            "updatedAt": "2026-05-17T12:00:00.000Z"
-          }
-        }
-      }
+  "streams": [
+    {
+      "title": "Custom Stream",
+      "url": "https://example.com/movie.mp4"
     }
-  }
+  ]
 }
 ```
 
-## Security
+When no link exists:
 
-Firebase Admin SDK is used only on the backend. Do not expose Firebase service account values in frontend code.
+```json
+{
+  "streams": []
+}
+```
+
+## Stream cache behavior
+
+Only stream routes send no-cache headers:
+
+```http
+Cache-Control: no-store, no-cache, must-revalidate, proxy-revalidate
+Pragma: no-cache
+Expires: 0
+Surrogate-Control: no-store
+```
+
+## Useful curl tests
+
+```bash
+curl http://localhost:3000/health
+curl http://localhost:3000/manifest.json
+
+curl -X POST http://localhost:3000/api/link/movie \
+  -H 'Content-Type: application/json' \
+  -d '{"imdbId":"tt1234567","url":"https://example.com/movie.mp4"}'
+
+curl http://localhost:3000/stream/movie/tt1234567.json
+
+curl -X POST http://localhost:3000/api/link/serie \
+  -H 'Content-Type: application/json' \
+  -d '{"imdbId":"tt1234567","season":1,"episode":2,"url":"https://example.com/episode.mp4"}'
+
+curl http://localhost:3000/stream/series/tt1234567:1:2.json
+curl http://localhost:3000/stream/series/tt1234567/1/2.json
+```
