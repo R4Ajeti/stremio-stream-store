@@ -5,6 +5,14 @@ import { GetMovieLink, GetSerieLink } from '../services/link.service.js'
 import { ImdbIdParamSchema } from '../validators/link.validator.js'
 import type { StremioStreamResponse } from '../types/link.type.js'
 
+function SetNoCacheHeaders(ReplyObj: { header: (NameStr: string, ValueStr: string) => unknown }): void {
+  ReplyObj.header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+  ReplyObj.header('Pragma', 'no-cache')
+  ReplyObj.header('Expires', '0')
+  ReplyObj.header('Surrogate-Control', 'no-store')
+}
+
+
 const StremioIdParamSchema = z.object({
   id: z.string().trim().min(1, 'Stremio ID is required'),
 })
@@ -65,6 +73,7 @@ function ParseSeriesStremioId(IdStr: string): {
 
 export async function StreamRoute(App: FastifyInstance) {
   App.get('/stream/movie/:imdbId.json', async (RequestObj, ReplyObj) => {
+    SetNoCacheHeaders(ReplyObj)
     try {
       const ParamsObj = ImdbIdParamSchema.parse(RequestObj.params)
       const LinkObj = await GetMovieLink(ParamsObj.imdbId)
@@ -88,6 +97,7 @@ export async function StreamRoute(App: FastifyInstance) {
   })
 
   App.get('/stream/series/:id.json', async (RequestObj, ReplyObj) => {
+    SetNoCacheHeaders(ReplyObj)
     try {
       const ParamsObj = StremioIdParamSchema.parse(RequestObj.params)
       const ParsedObj = ParseSeriesStremioId(ParamsObj.id)
@@ -119,6 +129,7 @@ export async function StreamRoute(App: FastifyInstance) {
   })
 
   App.get('/stream/series/:imdbId/:season/:episode.json', async (RequestObj, ReplyObj) => {
+    SetNoCacheHeaders(ReplyObj)
     try {
       const ParamsObj = z.object({
         imdbId: z.string().trim().regex(ImdbIdRegex, 'IMDb ID must look like tt1234567'),
