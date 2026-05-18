@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
-import { BuildApp } from '../src/app.ts'
+import { BuildApp } from '../dist/app.js'
 
 const AppPromise = BuildApp().then(async (App) => {
   await App.ready()
