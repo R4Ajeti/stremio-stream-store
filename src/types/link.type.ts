@@ -25,7 +25,7 @@ export interface SaveLinkResult {
 
 export interface StremioStream {
   title: string
-  externalUrl: string
+  url: string
 }
 
 export interface StremioStreamResponse {

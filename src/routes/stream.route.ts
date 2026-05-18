@@ -22,7 +22,7 @@ function LinkToStreamResponse(UrlStr: string): StremioStreamResponse {
     streams: [
       {
         title: 'Custom Stream',
-        externalUrl: UrlStr,
+        url: UrlStr,
       },
     ],
   }
