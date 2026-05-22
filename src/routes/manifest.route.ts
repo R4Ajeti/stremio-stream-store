@@ -14,6 +14,10 @@ export async function ManifestRoute(App: FastifyInstance) {
       types: ['movie', 'series'],
       catalogs: [],
       idPrefixes: ['tt'],
+      stremioAddonsConfig: {
+        "issuer": "https://stremio-addons.net",
+        "signature": "eyJhbGciOiJkaXIiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0..nEMpa0hsZuOu6pttBbktMA.XQLFRnZlfSBaioKRgUpogLIfPSwDv7olyKxR-RrHXtKE76ZwFewSEIU2ZMDH_g9EPXmFAW3u-stzc3GDg3PDKz9otJBQ036hWFdH-eH3ONIVuYbG3NB_WOssqbMjoqCD.Z_HIcH3l7R2HO_m3P9drOg"
+      }
     })
   })
 }
