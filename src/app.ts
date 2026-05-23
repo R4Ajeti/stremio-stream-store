@@ -1,5 +1,4 @@
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 
 import Cors from '@fastify/cors'
 import FormBody from '@fastify/formbody'
@@ -7,13 +6,11 @@ import Static from '@fastify/static'
 import Fastify from 'fastify'
 
 import { Env } from './config/env.js'
+import { trackRoute } from './services/analytics.service.js'
 import { LinkRoute } from './routes/link.route.js'
 import { ManifestRoute } from './routes/manifest.route.js'
 import { StreamRoute } from './routes/stream.route.js'
 import { UiRoute } from './routes/ui.route.js'
-
-const FilenameStr = fileURLToPath(import.meta.url)
-const DirnameStr = path.dirname(FilenameStr)
 
 export async function BuildApp() {
   const App = Fastify({
@@ -27,19 +24,13 @@ export async function BuildApp() {
   await App.register(FormBody)
 
   await App.register(Static, {
-    root: path.join(DirnameStr, '..', 'public'),
+    root: path.join(process.cwd(), 'public'),
     prefix: '/public/',
   })
 
   App.get('/favicon.ico', async (_RequestObj, ReplyObj) => {
     // track favicon requests on Vercel
-    try {
-      // best-effort, non-blocking
-      ;(async () => {
-        const { trackRoute } = await import('./services/analytics.service.js').catch(() => ({ trackRoute: undefined })) as any
-        if (typeof trackRoute === 'function') trackRoute('/favicon.ico', 'GET')
-      })()
-    } catch {}
+    trackRoute('/favicon.ico', 'GET')
 
     return ReplyObj
       .type('image/png')
@@ -48,12 +39,7 @@ export async function BuildApp() {
 
   App.get('/health', async () => {
     // track health checks
-    try {
-      ;(async () => {
-        const { trackRoute } = await import('./services/analytics.service.js').catch(() => ({ trackRoute: undefined })) as any
-        if (typeof trackRoute === 'function') trackRoute('/health', 'GET')
-      })()
-    } catch {}
+    trackRoute('/health', 'GET')
 
     return {
       ok: true,

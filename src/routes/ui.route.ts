@@ -2,7 +2,6 @@ import type { FastifyInstance } from 'fastify'
 import { trackRoute } from '../services/analytics.service.js'
 
 export async function UiRoute(App: FastifyInstance) {
-  App.get('/', async (_RequestObj, ReplyObj) => ReplyObj.redirect('/set'))
   App.get('/', async (RequestObj, ReplyObj) => {
     // track redirect
     trackRoute(RequestObj.raw.url || '/', RequestObj.raw.method || 'GET')
