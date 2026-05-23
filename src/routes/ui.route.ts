@@ -1,8 +1,16 @@
 import type { FastifyInstance } from 'fastify'
+import { trackRoute } from '../services/analytics.service.js'
 
 export async function UiRoute(App: FastifyInstance) {
   App.get('/', async (_RequestObj, ReplyObj) => ReplyObj.redirect('/set'))
-  App.get('/set', async (_RequestObj, ReplyObj) => {
+  App.get('/', async (RequestObj, ReplyObj) => {
+    // track redirect
+    trackRoute(RequestObj.raw.url || '/', RequestObj.raw.method || 'GET')
+    return ReplyObj.redirect('/set')
+  })
+
+  App.get('/set', async (RequestObj, ReplyObj) => {
+    trackRoute(RequestObj.raw.url || '/set', RequestObj.raw.method || 'GET')
     const AnalyticsScriptStr = process.env.VERCEL ? '<script defer src="/_vercel/insights/script.js"></script>' : ''
 
     return ReplyObj.type('text/html').send(`<!doctype html>

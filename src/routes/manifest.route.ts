@@ -1,9 +1,11 @@
 import type { FastifyInstance } from 'fastify'
 
 import { Env } from '../config/env.js'
+import { trackRoute } from '../services/analytics.service.js'
 
 export async function ManifestRoute(App: FastifyInstance) {
-  App.get('/manifest.json', async (_RequestObj, ReplyObj) => {
+  App.get('/manifest.json', async (RequestObj, ReplyObj) => {
+    trackRoute(RequestObj.raw.url || '/manifest.json', RequestObj.raw.method || 'GET')
     return ReplyObj.send({
       id: Env.ADDON_ID,
       version: '1.0.0',

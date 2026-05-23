@@ -32,12 +32,29 @@ export async function BuildApp() {
   })
 
   App.get('/favicon.ico', async (_RequestObj, ReplyObj) => {
+    // track favicon requests on Vercel
+    try {
+      // best-effort, non-blocking
+      ;(async () => {
+        const { trackRoute } = await import('./services/analytics.service.js').catch(() => ({ trackRoute: undefined })) as any
+        if (typeof trackRoute === 'function') trackRoute('/favicon.ico', 'GET')
+      })()
+    } catch {}
+
     return ReplyObj
       .type('image/png')
       .sendFile('logo.png')
   })
 
   App.get('/health', async () => {
+    // track health checks
+    try {
+      ;(async () => {
+        const { trackRoute } = await import('./services/analytics.service.js').catch(() => ({ trackRoute: undefined })) as any
+        if (typeof trackRoute === 'function') trackRoute('/health', 'GET')
+      })()
+    } catch {}
+
     return {
       ok: true,
       name: Env.ADDON_NAME,

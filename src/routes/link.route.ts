@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify'
 import { ZodError } from 'zod'
 
 import { SaveMovieLink, SaveSerieLink } from '../services/link.service.js'
+import { trackRoute } from '../services/analytics.service.js'
 import { MovieLinkSchema, SerieLinkSchema } from '../validators/link.validator.js'
 
 function FormatError(ErrorObj: unknown): { error: string } {
@@ -24,6 +25,7 @@ function FormatError(ErrorObj: unknown): { error: string } {
 
 export async function LinkRoute(App: FastifyInstance) {
   App.post('/movie', async (RequestObj, ReplyObj) => {
+    trackRoute(RequestObj.raw.url || '/api/link/movie', RequestObj.raw.method || 'POST')
     try {
       const BodyObj = MovieLinkSchema.parse(RequestObj.body)
       const ResultObj = await SaveMovieLink(BodyObj)
@@ -40,6 +42,7 @@ export async function LinkRoute(App: FastifyInstance) {
   })
 
   App.post('/serie', async (RequestObj, ReplyObj) => {
+    trackRoute(RequestObj.raw.url || '/api/link/serie', RequestObj.raw.method || 'POST')
     try {
       const BodyObj = SerieLinkSchema.parse(RequestObj.body)
       const ResultObj = await SaveSerieLink(BodyObj)

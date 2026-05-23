@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyReply } from 'fastify'
 import { ZodError } from 'zod'
 
 import { GetMovieLink, GetSerieLink } from '../services/link.service.js'
+import { trackRoute } from '../services/analytics.service.js'
 import type { StremioStreamResponse } from '../types/link.type.js'
 import { MovieStreamParamSchema, SeriesIdParamSchema, SeriesPathParamSchema } from '../validators/link.validator.js'
 
@@ -50,6 +51,7 @@ function ValidationErrorResponse(ErrorObj: ZodError): { streams: []; error: stri
 
 export async function StreamRoute(App: FastifyInstance) {
   App.get('/stream/movie/:imdbId.json', async (RequestObj, ReplyObj) => {
+    trackRoute(RequestObj.raw.url || '/stream/movie/:imdbId.json', RequestObj.raw.method || 'GET')
     SetNoStoreHeaders(ReplyObj)
 
     try {
@@ -72,6 +74,7 @@ export async function StreamRoute(App: FastifyInstance) {
   })
 
   App.get('/stream/series/:id.json', async (RequestObj, ReplyObj) => {
+    trackRoute(RequestObj.raw.url || '/stream/series/:id.json', RequestObj.raw.method || 'GET')
     SetNoStoreHeaders(ReplyObj)
 
     try {
@@ -95,6 +98,7 @@ export async function StreamRoute(App: FastifyInstance) {
   })
 
   App.get('/stream/series/:imdbId/:season/:episode.json', async (RequestObj, ReplyObj) => {
+    trackRoute(RequestObj.raw.url || '/stream/series/:imdbId/:season/:episode.json', RequestObj.raw.method || 'GET')
     SetNoStoreHeaders(ReplyObj)
 
     try {
