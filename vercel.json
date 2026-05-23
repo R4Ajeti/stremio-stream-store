@@ -2,7 +2,31 @@
   "version": 2,
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/",
+      "destination": "/api/index.ts"
+    },
+    {
+      "source": "/set",
+      "destination": "/api/index.ts"
+    },
+    {
+      "source": "/health",
+      "destination": "/api/index.ts"
+    },
+    {
+      "source": "/manifest.json",
+      "destination": "/api/index.ts"
+    },
+    {
+      "source": "/favicon.ico",
+      "destination": "/api/index.ts"
+    },
+    {
+      "source": "/stream/(.*)",
+      "destination": "/api/index.ts"
+    },
+    {
+      "source": "/api/link/(.*)",
       "destination": "/api/index.ts"
     }
   ]
