@@ -25,7 +25,7 @@ function FormatError(ErrorObj: unknown): { error: string } {
 
 export async function LinkRoute(App: FastifyInstance) {
   App.post('/movie', async (RequestObj, ReplyObj) => {
-    trackRoute(RequestObj.raw.url || '/api/link/movie', RequestObj.raw.method || 'POST')
+    await trackRoute('/api/link/movie', RequestObj.method)
     try {
       const BodyObj = MovieLinkSchema.parse(RequestObj.body)
       const ResultObj = await SaveMovieLink(BodyObj)
@@ -42,7 +42,7 @@ export async function LinkRoute(App: FastifyInstance) {
   })
 
   App.post('/serie', async (RequestObj, ReplyObj) => {
-    trackRoute(RequestObj.raw.url || '/api/link/serie', RequestObj.raw.method || 'POST')
+    await trackRoute('/api/link/serie', RequestObj.method)
     try {
       const BodyObj = SerieLinkSchema.parse(RequestObj.body)
       const ResultObj = await SaveSerieLink(BodyObj)

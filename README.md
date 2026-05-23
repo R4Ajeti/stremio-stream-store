@@ -100,7 +100,11 @@ FIREBASE_PRIVATE_KEY_BASE64
 FIREBASE_DATABASE_URL
 ADDON_BASE_URL
 PORT
+ANALYTICS_READ_TOKEN
 ```
+
+`ANALYTICS_READ_TOKEN` is optional. When set, `GET /api/analytics/routes` requires either
+`Authorization: Bearer <token>` or `?token=<token>`.
 
 Copy the example file:
 
@@ -177,6 +181,7 @@ FIREBASE_PRIVATE_KEY_BASE64
 FIREBASE_DATABASE_URL
 ADDON_BASE_URL=https://your-vercel-domain.vercel.app
 PORT=3000
+ANALYTICS_READ_TOKEN=optional-secret-for-route-stats
 ```
 
 `PORT` is mainly used for local/server hosting. Vercel handles the actual serverless runtime port internally.
@@ -193,6 +198,28 @@ GET /
 
 ```http
 GET /health
+```
+
+### Route analytics
+
+```http
+GET /api/analytics/routes
+```
+
+Returns route hit counts from Firebase:
+
+```json
+{
+  "routes": [
+    {
+      "route": "/stream/movie/:imdbId.json",
+      "method": "GET",
+      "hits": 12,
+      "firstHitAt": "2026-05-24T10:00:00.000Z",
+      "lastHitAt": "2026-05-24T10:30:00.000Z"
+    }
+  ]
+}
 ```
 
 ### Manifest
@@ -327,6 +354,7 @@ Surrogate-Control: no-store
 
 ```bash
 curl http://localhost:3000/health
+curl http://localhost:3000/api/analytics/routes
 curl http://localhost:3000/manifest.json
 
 curl -X POST http://localhost:3000/api/link/movie \

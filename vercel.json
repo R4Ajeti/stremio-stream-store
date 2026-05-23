@@ -30,6 +30,10 @@
       "destination": "/api/index.ts"
     },
     {
+      "source": "/api/analytics/(.*)",
+      "destination": "/api/index.ts"
+    },
+    {
       "source": "/api/link/(.*)",
       "destination": "/api/index.ts"
     }

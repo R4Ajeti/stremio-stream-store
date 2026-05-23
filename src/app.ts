@@ -7,6 +7,7 @@ import Fastify from 'fastify'
 
 import { Env } from './config/env.js'
 import { trackRoute } from './services/analytics.service.js'
+import { AnalyticsRoute } from './routes/analytics.route.js'
 import { LinkRoute } from './routes/link.route.js'
 import { ManifestRoute } from './routes/manifest.route.js'
 import { StreamRoute } from './routes/stream.route.js'
@@ -28,17 +29,16 @@ export async function BuildApp() {
     prefix: '/public/',
   })
 
-  App.get('/favicon.ico', async (_RequestObj, ReplyObj) => {
-    // track favicon requests on Vercel
-    trackRoute('/favicon.ico', 'GET')
+  App.get('/favicon.ico', async (RequestObj, ReplyObj) => {
+    await trackRoute('/favicon.ico', RequestObj.method)
 
     return ReplyObj
       .type('image/png')
       .sendFile('logo.png')
   })
 
-  App.get('/health', async () => {
-    trackRoute('/health', 'GET')
+  App.get('/health', async (RequestObj) => {
+    await trackRoute('/health', RequestObj.method)
 
     return {
       ok: true,
@@ -50,6 +50,9 @@ export async function BuildApp() {
   await App.register(UiRoute)
   await App.register(ManifestRoute)
   await App.register(StreamRoute)
+  await App.register(AnalyticsRoute, {
+    prefix: '/api/analytics',
+  })
   await App.register(LinkRoute, {
     prefix: '/api/link',
   })
