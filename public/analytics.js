@@ -9,7 +9,9 @@ const ElementsObj = {
   statusText: document.getElementById('statusText'),
   lastUpdatedText: document.getElementById('lastUpdatedText'),
   totalHits: document.getElementById('totalHits'),
+  uniqueVisitors: document.getElementById('uniqueVisitors'),
   todayHits: document.getElementById('todayHits'),
+  todayVisitors: document.getElementById('todayVisitors'),
   recentHits: document.getElementById('recentHits'),
   trackedRoutes: document.getElementById('trackedRoutes'),
   todayLabel: document.getElementById('todayLabel'),
@@ -17,6 +19,10 @@ const ElementsObj = {
   topRoutesChart: document.getElementById('topRoutesChart'),
   todayRoutesChart: document.getElementById('todayRoutesChart'),
   trendChart: document.getElementById('trendChart'),
+  countriesPanel: document.getElementById('countriesPanel'),
+  devicesPanel: document.getElementById('devicesPanel'),
+  browsersPanel: document.getElementById('browsersPanel'),
+  operatingSystemsPanel: document.getElementById('operatingSystemsPanel'),
   routesTableBody: document.getElementById('routesTableBody'),
 }
 
@@ -53,7 +59,9 @@ function SetStatus(MessageStr, IsErrorBool = false) {
 
 function SetSummary(DataObj) {
   ElementsObj.totalHits.textContent = FormatNumber(DataObj.totals.hits)
+  ElementsObj.uniqueVisitors.textContent = FormatNumber(DataObj.totals.visitors)
   ElementsObj.todayHits.textContent = FormatNumber(DataObj.totals.todayHits)
+  ElementsObj.todayVisitors.textContent = FormatNumber(DataObj.totals.todayVisitors)
   ElementsObj.recentHits.textContent = FormatNumber(DataObj.totals.recentHits)
   ElementsObj.trackedRoutes.textContent = FormatNumber(DataObj.totals.routes)
   ElementsObj.todayLabel.textContent = `${DataObj.today} (${DataObj.timeZone})`
@@ -168,6 +176,87 @@ function RenderTrendChart(DataObj) {
   `
 }
 
+function BuildDonutGradient(TopSegmentsArr) {
+  const TotalInt = TopSegmentsArr.reduce((Total, SegmentObj) => Total + Number(SegmentObj.visitors || 0), 0)
+  let CursorInt = 0
+  const PartsArr = []
+
+  for (const [IndexInt, SegmentObj] of TopSegmentsArr.entries()) {
+    const SliceInt = TotalInt > 0 ? (Number(SegmentObj.visitors || 0) / TotalInt) * 360 : 0
+    const ColorStr = PaletteArr[IndexInt % PaletteArr.length]
+    PartsArr.push(`${ColorStr} ${CursorInt.toFixed(2)}deg ${(CursorInt + SliceInt).toFixed(2)}deg`)
+    CursorInt += SliceInt
+  }
+
+  return PartsArr.length ? `conic-gradient(${PartsArr.join(', ')})` : ''
+}
+
+function RenderAudiencePanel(ContainerElement, SegmentsArr, EmptyMessageStr) {
+  ContainerElement.replaceChildren()
+
+  const TopSegmentsArr = [...SegmentsArr]
+    .sort((LeftObj, RightObj) => Number(RightObj.visitors || 0) - Number(LeftObj.visitors || 0) || Number(RightObj.hits || 0) - Number(LeftObj.hits || 0))
+    .slice(0, 5)
+  const TotalVisitorsInt = TopSegmentsArr.reduce((TotalInt, SegmentObj) => TotalInt + Number(SegmentObj.visitors || 0), 0)
+
+  if (!TopSegmentsArr.length || TotalVisitorsInt === 0) {
+    ContainerElement.appendChild(CreateEmptyState(EmptyMessageStr))
+    return
+  }
+
+  const ContentElement = document.createElement('div')
+  const DonutWrapElement = document.createElement('div')
+  const DonutElement = document.createElement('div')
+  const DonutCenterElement = document.createElement('div')
+  const DonutTotalElement = document.createElement('strong')
+  const DonutLabelElement = document.createElement('span')
+  const ListElement = document.createElement('div')
+
+  ContentElement.className = 'audience-content'
+  DonutWrapElement.className = 'donut-wrap'
+  DonutElement.className = 'donut-visual'
+  DonutElement.style.background = BuildDonutGradient(TopSegmentsArr)
+  DonutCenterElement.className = 'donut-center'
+  DonutTotalElement.textContent = FormatNumber(TotalVisitorsInt)
+  DonutLabelElement.textContent = 'visitors'
+  ListElement.className = 'segment-list'
+
+  DonutCenterElement.append(DonutTotalElement, DonutLabelElement)
+  DonutElement.appendChild(DonutCenterElement)
+
+  for (const [IndexInt, SegmentObj] of TopSegmentsArr.entries()) {
+    const VisitorsInt = Number(SegmentObj.visitors || 0)
+    const PercentInt = TotalVisitorsInt > 0 ? Math.round((VisitorsInt / TotalVisitorsInt) * 100) : 0
+    const RowElement = document.createElement('div')
+    const MetaElement = document.createElement('div')
+    const NameElement = document.createElement('span')
+    const ValueElement = document.createElement('strong')
+    const TrackElement = document.createElement('div')
+    const FillElement = document.createElement('div')
+
+    RowElement.className = 'segment-row'
+    MetaElement.className = 'segment-meta'
+    NameElement.className = 'segment-name'
+    NameElement.title = SegmentObj.label
+    NameElement.textContent = `${SegmentObj.flag ? `${SegmentObj.flag} ` : ''}${SegmentObj.label}`
+    ValueElement.className = 'segment-value'
+    ValueElement.textContent = `${PercentInt}%`
+    TrackElement.className = 'segment-track'
+    FillElement.className = 'segment-fill'
+    FillElement.style.width = `${Math.max(PercentInt, 2)}%`
+    FillElement.style.background = PaletteArr[IndexInt % PaletteArr.length]
+
+    MetaElement.append(NameElement, ValueElement)
+    TrackElement.appendChild(FillElement)
+    RowElement.append(MetaElement, TrackElement)
+    ListElement.appendChild(RowElement)
+  }
+
+  DonutWrapElement.append(DonutElement, ListElement)
+  ContentElement.appendChild(DonutWrapElement)
+  ContainerElement.appendChild(ContentElement)
+}
+
 function AppendCell(RowElement, TextStr, ClassStr = '') {
   const CellElement = document.createElement('td')
   CellElement.textContent = TextStr
@@ -216,6 +305,10 @@ function RenderDashboard(DataObj) {
   RenderBarChart(ElementsObj.topRoutesChart, DataObj.routes, 'hits', 'No route hits yet')
   RenderBarChart(ElementsObj.todayRoutesChart, DataObj.routes, 'todayHits', 'No traffic today')
   RenderTrendChart(DataObj)
+  RenderAudiencePanel(ElementsObj.countriesPanel, DataObj.audience.countries, 'No country data yet')
+  RenderAudiencePanel(ElementsObj.devicesPanel, DataObj.audience.devices, 'No device data yet')
+  RenderAudiencePanel(ElementsObj.browsersPanel, DataObj.audience.browsers, 'No browser data yet')
+  RenderAudiencePanel(ElementsObj.operatingSystemsPanel, DataObj.audience.operatingSystems, 'No operating system data yet')
   RenderRoutesTable(DataObj.routes)
 }
 

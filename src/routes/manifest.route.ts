@@ -5,7 +5,7 @@ import { trackRoute } from '../services/analytics.service.js'
 
 export async function ManifestRoute(App: FastifyInstance) {
   App.get('/manifest.json', async (RequestObj, ReplyObj) => {
-    await trackRoute('/manifest.json', RequestObj.method)
+    await trackRoute('/manifest.json', { method: RequestObj.method, headers: RequestObj.headers, ip: RequestObj.ip })
 
     return ReplyObj.send({
       id: Env.ADDON_ID,

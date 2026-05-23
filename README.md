@@ -102,6 +102,7 @@ ADDON_BASE_URL
 PORT
 ANALYTICS_READ_TOKEN
 ANALYTICS_TIME_ZONE
+ANALYTICS_IP_SALT
 ```
 
 `ANALYTICS_READ_TOKEN` is optional. When set, `GET /api/analytics/routes` requires either
@@ -109,6 +110,9 @@ ANALYTICS_TIME_ZONE
 
 `ANALYTICS_TIME_ZONE` is optional and defaults to `UTC`. Set it to an IANA time zone such as
 `Europe/Belgrade` if you want daily analytics buckets to follow that local day.
+
+`ANALYTICS_IP_SALT` is optional, but recommended. It is used to hash requester IP data for
+unique visitor counts. Raw IP addresses are not stored.
 
 Copy the example file:
 
@@ -187,6 +191,7 @@ ADDON_BASE_URL=https://your-vercel-domain.vercel.app
 PORT=3000
 ANALYTICS_READ_TOKEN=optional-secret-for-route-stats
 ANALYTICS_TIME_ZONE=UTC
+ANALYTICS_IP_SALT=long-random-secret-for-visitor-hashes
 ```
 
 `PORT` is mainly used for local/server hosting. Vercel handles the actual serverless runtime port internally.
@@ -212,6 +217,9 @@ GET /ui/analytics/routes
 ```
 
 Shows the route analytics dashboard.
+It includes top routes, daily trends, unique visitors, countries, devices, browsers, and
+operating systems. Visitor identity is based on a salted hash of request IP data and user
+agent; raw IP addresses are not stored.
 
 ```http
 GET /api/analytics/routes
@@ -227,7 +235,15 @@ Returns route hit counts from Firebase:
     "hits": 12,
     "todayHits": 4,
     "recentHits": 10,
+    "visitors": 3,
+    "todayVisitors": 2,
     "routes": 10
+  },
+  "audience": {
+    "countries": [],
+    "devices": [],
+    "browsers": [],
+    "operatingSystems": []
   },
   "routes": [
     {

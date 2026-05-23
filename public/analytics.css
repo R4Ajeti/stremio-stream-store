@@ -111,7 +111,7 @@ button:hover {
 
 .summary-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 12px;
 }
@@ -156,7 +156,15 @@ button:hover {
 }
 
 .metric-panel:nth-child(4) {
+  border-top-color: #fb7185;
+}
+
+.metric-panel:nth-child(5) {
   border-top-color: #f472b6;
+}
+
+.metric-panel:nth-child(6) {
+  border-top-color: #a78bfa;
 }
 
 .status-strip {
@@ -194,6 +202,13 @@ button:hover {
 
 .panel-full {
   grid-column: 1 / -1;
+}
+
+.audience-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
 .panel-heading {
@@ -287,6 +302,100 @@ button:hover {
   font-size: 12px;
 }
 
+.audience-content {
+  display: grid;
+  gap: 16px;
+}
+
+.donut-wrap {
+  display: grid;
+  grid-template-columns: 128px minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+}
+
+.donut-visual {
+  width: 128px;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: conic-gradient(#273044 0deg, #273044 360deg);
+  position: relative;
+}
+
+.donut-visual::after {
+  content: "";
+  position: absolute;
+  inset: 24px;
+  border-radius: 50%;
+  background: #10151f;
+}
+
+.donut-center {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 3px;
+  text-align: center;
+}
+
+.donut-center strong {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.donut-center span {
+  color: #8793a9;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.segment-list {
+  display: grid;
+  gap: 10px;
+}
+
+.segment-row {
+  display: grid;
+  gap: 7px;
+}
+
+.segment-meta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  color: #dce5f4;
+  font-size: 13px;
+}
+
+.segment-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.segment-value {
+  color: #f4f7fb;
+  font-weight: 850;
+  font-variant-numeric: tabular-nums;
+}
+
+.segment-track {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #1a2230;
+}
+
+.segment-fill {
+  height: 100%;
+  min-width: 2%;
+  border-radius: inherit;
+}
+
 .routes-panel {
   padding-bottom: 0;
 }
@@ -366,10 +475,11 @@ td {
   }
 
   .summary-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .chart-grid {
+  .chart-grid,
+  .audience-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -387,6 +497,14 @@ td {
   .summary-grid,
   .toolbar {
     grid-template-columns: 1fr;
+  }
+
+  .donut-wrap {
+    grid-template-columns: 1fr;
+  }
+
+  .donut-visual {
+    justify-self: center;
   }
 
   .metric-panel strong {

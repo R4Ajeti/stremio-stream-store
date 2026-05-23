@@ -4,12 +4,12 @@ import { trackRoute } from '../services/analytics.service.js'
 export async function UiRoute(App: FastifyInstance) {
   App.get('/', async (RequestObj, ReplyObj) => {
     // track redirect
-    await trackRoute('/', RequestObj.method)
+    await trackRoute('/', { method: RequestObj.method, headers: RequestObj.headers, ip: RequestObj.ip })
     return ReplyObj.redirect('/set')
   })
 
   App.get('/set', async (RequestObj, ReplyObj) => {
-    await trackRoute('/set', RequestObj.method)
+    await trackRoute('/set', { method: RequestObj.method, headers: RequestObj.headers, ip: RequestObj.ip })
     const AnalyticsScriptStr = process.env.VERCEL ? '<script defer src="/_vercel/insights/script.js"></script>' : ''
 
     return ReplyObj.type('text/html').send(`<!doctype html>
@@ -93,7 +93,9 @@ export async function UiRoute(App: FastifyInstance) {
 </html>`)
   })
 
-  App.get('/ui/analytics/routes', async (_RequestObj, ReplyObj) => {
+  App.get('/ui/analytics/routes', async (RequestObj, ReplyObj) => {
+    await trackRoute('/ui/analytics/routes', { method: RequestObj.method, headers: RequestObj.headers, ip: RequestObj.ip })
+
     return ReplyObj.type('text/html').send(`<!doctype html>
 <html lang="en">
 <head>
@@ -128,8 +130,16 @@ export async function UiRoute(App: FastifyInstance) {
         <strong id="totalHits">0</strong>
       </article>
       <article class="metric-panel">
-        <span>Today</span>
+        <span>Unique visitors</span>
+        <strong id="uniqueVisitors">0</strong>
+      </article>
+      <article class="metric-panel">
+        <span>Hits today</span>
         <strong id="todayHits">0</strong>
+      </article>
+      <article class="metric-panel">
+        <span>Visitors today</span>
+        <strong id="todayVisitors">0</strong>
       </article>
       <article class="metric-panel">
         <span>Last 7 days</span>
@@ -169,6 +179,40 @@ export async function UiRoute(App: FastifyInstance) {
           <span id="trendLabel"></span>
         </div>
         <div class="trend-chart" id="trendChart"></div>
+      </article>
+    </section>
+
+    <section class="audience-grid">
+      <article class="panel audience-panel">
+        <div class="panel-heading">
+          <h2>Countries</h2>
+          <span>Unique visitors</span>
+        </div>
+        <div id="countriesPanel"></div>
+      </article>
+
+      <article class="panel audience-panel">
+        <div class="panel-heading">
+          <h2>Devices</h2>
+          <span>Unique visitors</span>
+        </div>
+        <div id="devicesPanel"></div>
+      </article>
+
+      <article class="panel audience-panel">
+        <div class="panel-heading">
+          <h2>Browsers</h2>
+          <span>Unique visitors</span>
+        </div>
+        <div id="browsersPanel"></div>
+      </article>
+
+      <article class="panel audience-panel">
+        <div class="panel-heading">
+          <h2>Operating Systems</h2>
+          <span>Unique visitors</span>
+        </div>
+        <div id="operatingSystemsPanel"></div>
       </article>
     </section>
 

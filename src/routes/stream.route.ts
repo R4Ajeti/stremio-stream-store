@@ -51,7 +51,7 @@ function ValidationErrorResponse(ErrorObj: ZodError): { streams: []; error: stri
 
 export async function StreamRoute(App: FastifyInstance) {
   App.get('/stream/movie/:imdbId.json', async (RequestObj, ReplyObj) => {
-    await trackRoute('/stream/movie/:imdbId.json', RequestObj.method)
+    await trackRoute('/stream/movie/:imdbId.json', { method: RequestObj.method, headers: RequestObj.headers, ip: RequestObj.ip })
     SetNoStoreHeaders(ReplyObj)
 
     try {
@@ -74,7 +74,7 @@ export async function StreamRoute(App: FastifyInstance) {
   })
 
   App.get('/stream/series/:id.json', async (RequestObj, ReplyObj) => {
-    await trackRoute('/stream/series/:id.json', RequestObj.method)
+    await trackRoute('/stream/series/:id.json', { method: RequestObj.method, headers: RequestObj.headers, ip: RequestObj.ip })
     SetNoStoreHeaders(ReplyObj)
 
     try {
@@ -98,7 +98,7 @@ export async function StreamRoute(App: FastifyInstance) {
   })
 
   App.get('/stream/series/:imdbId/:season/:episode.json', async (RequestObj, ReplyObj) => {
-    await trackRoute('/stream/series/:imdbId/:season/:episode.json', RequestObj.method)
+    await trackRoute('/stream/series/:imdbId/:season/:episode.json', { method: RequestObj.method, headers: RequestObj.headers, ip: RequestObj.ip })
     SetNoStoreHeaders(ReplyObj)
 
     try {

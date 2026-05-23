@@ -30,7 +30,7 @@ export async function BuildApp() {
   })
 
   App.get('/favicon.ico', async (RequestObj, ReplyObj) => {
-    await trackRoute('/favicon.ico', RequestObj.method)
+    await trackRoute('/favicon.ico', { method: RequestObj.method, headers: RequestObj.headers, ip: RequestObj.ip })
 
     return ReplyObj
       .type('image/png')
@@ -38,7 +38,7 @@ export async function BuildApp() {
   })
 
   App.get('/health', async (RequestObj) => {
-    await trackRoute('/health', RequestObj.method)
+    await trackRoute('/health', { method: RequestObj.method, headers: RequestObj.headers, ip: RequestObj.ip })
 
     return {
       ok: true,
