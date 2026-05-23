@@ -101,10 +101,14 @@ FIREBASE_DATABASE_URL
 ADDON_BASE_URL
 PORT
 ANALYTICS_READ_TOKEN
+ANALYTICS_TIME_ZONE
 ```
 
 `ANALYTICS_READ_TOKEN` is optional. When set, `GET /api/analytics/routes` requires either
 `Authorization: Bearer <token>` or `?token=<token>`.
+
+`ANALYTICS_TIME_ZONE` is optional and defaults to `UTC`. Set it to an IANA time zone such as
+`Europe/Belgrade` if you want daily analytics buckets to follow that local day.
 
 Copy the example file:
 
@@ -182,6 +186,7 @@ FIREBASE_DATABASE_URL
 ADDON_BASE_URL=https://your-vercel-domain.vercel.app
 PORT=3000
 ANALYTICS_READ_TOKEN=optional-secret-for-route-stats
+ANALYTICS_TIME_ZONE=UTC
 ```
 
 `PORT` is mainly used for local/server hosting. Vercel handles the actual serverless runtime port internally.
@@ -203,6 +208,12 @@ GET /health
 ### Route analytics
 
 ```http
+GET /ui/analytics/routes
+```
+
+Shows the route analytics dashboard.
+
+```http
 GET /api/analytics/routes
 ```
 
@@ -210,13 +221,31 @@ Returns route hit counts from Firebase:
 
 ```json
 {
+  "today": "2026-05-24",
+  "timeZone": "UTC",
+  "totals": {
+    "hits": 12,
+    "todayHits": 4,
+    "recentHits": 10,
+    "routes": 10
+  },
   "routes": [
     {
       "route": "/stream/movie/:imdbId.json",
       "method": "GET",
       "hits": 12,
+      "todayHits": 4,
+      "recentHits": 10,
       "firstHitAt": "2026-05-24T10:00:00.000Z",
-      "lastHitAt": "2026-05-24T10:30:00.000Z"
+      "lastHitAt": "2026-05-24T10:30:00.000Z",
+      "days": [
+        {
+          "date": "2026-05-24",
+          "hits": 4,
+          "firstHitAt": "2026-05-24T10:00:00.000Z",
+          "lastHitAt": "2026-05-24T10:30:00.000Z"
+        }
+      ]
     }
   ]
 }
@@ -354,6 +383,7 @@ Surrogate-Control: no-store
 
 ```bash
 curl http://localhost:3000/health
+curl http://localhost:3000/ui/analytics/routes
 curl http://localhost:3000/api/analytics/routes
 curl http://localhost:3000/manifest.json
 

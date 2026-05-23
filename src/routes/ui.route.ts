@@ -92,4 +92,113 @@ export async function UiRoute(App: FastifyInstance) {
 </body>
 </html>`)
   })
+
+  App.get('/ui/analytics/routes', async (_RequestObj, ReplyObj) => {
+    return ReplyObj.type('text/html').send(`<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Route Analytics | Stremio Stream Store</title>
+  <link rel="icon" type="image/png" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/public/logo.png" />
+  <link rel="stylesheet" href="/public/analytics.css" />
+</head>
+<body>
+  <main class="dashboard-shell">
+    <header class="dashboard-header">
+      <div>
+        <p class="eyebrow">Stremio Stream Store</p>
+        <h1>Route Analytics</h1>
+      </div>
+
+      <form class="toolbar" id="tokenForm">
+        <label class="token-field">
+          <span>Access token</span>
+          <input id="tokenInput" type="password" autocomplete="off" placeholder="Optional" />
+        </label>
+        <button type="submit">Apply</button>
+        <button type="button" id="refreshButton">Refresh</button>
+      </form>
+    </header>
+
+    <section class="summary-grid" aria-label="Route analytics summary">
+      <article class="metric-panel">
+        <span>Total hits</span>
+        <strong id="totalHits">0</strong>
+      </article>
+      <article class="metric-panel">
+        <span>Today</span>
+        <strong id="todayHits">0</strong>
+      </article>
+      <article class="metric-panel">
+        <span>Last 7 days</span>
+        <strong id="recentHits">0</strong>
+      </article>
+      <article class="metric-panel">
+        <span>Tracked routes</span>
+        <strong id="trackedRoutes">0</strong>
+      </article>
+    </section>
+
+    <section class="status-strip">
+      <span id="statusText">Loading analytics...</span>
+      <span id="lastUpdatedText"></span>
+    </section>
+
+    <section class="chart-grid">
+      <article class="panel panel-large">
+        <div class="panel-heading">
+          <h2>Top 5 Routes</h2>
+          <span>Total hits</span>
+        </div>
+        <div class="bar-chart" id="topRoutesChart"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-heading">
+          <h2>Today</h2>
+          <span id="todayLabel"></span>
+        </div>
+        <div class="bar-chart compact" id="todayRoutesChart"></div>
+      </article>
+
+      <article class="panel panel-full">
+        <div class="panel-heading">
+          <h2>Daily Trend</h2>
+          <span id="trendLabel"></span>
+        </div>
+        <div class="trend-chart" id="trendChart"></div>
+      </article>
+    </section>
+
+    <section class="panel routes-panel">
+      <div class="panel-heading">
+        <h2>All Routes</h2>
+        <span>Sorted by total hits</span>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Route</th>
+              <th>Method</th>
+              <th>Total</th>
+              <th>Today</th>
+              <th>Last 7</th>
+              <th>Last hit</th>
+            </tr>
+          </thead>
+          <tbody id="routesTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="/public/analytics.js"></script>
+</body>
+</html>`)
+  })
 }

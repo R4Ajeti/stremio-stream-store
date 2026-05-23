@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify'
 
-import { GetRouteAnalytics, trackRoute } from '../services/analytics.service.js'
+import { GetRouteAnalytics } from '../services/analytics.service.js'
 
 function GetAuthorizationHeaderStr(RequestObj: FastifyRequest): string {
   const HeaderValue = RequestObj.headers.authorization
@@ -35,16 +35,12 @@ function IsAuthorized(RequestObj: FastifyRequest): boolean {
 
 export async function AnalyticsRoute(App: FastifyInstance) {
   App.get('/routes', async (RequestObj, ReplyObj) => {
-    await trackRoute('/api/analytics/routes', RequestObj.method)
-
     if (!IsAuthorized(RequestObj)) {
       return ReplyObj.status(401).send({
         error: 'Unauthorized',
       })
     }
 
-    return {
-      routes: await GetRouteAnalytics(),
-    }
+    return GetRouteAnalytics()
   })
 }
