@@ -38,7 +38,6 @@ export async function BuildApp() {
   })
 
   App.get('/health', async () => {
-    // track health checks
     trackRoute('/health', 'GET')
 
     return {
