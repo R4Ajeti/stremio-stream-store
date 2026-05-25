@@ -58,3 +58,4 @@ temp/
 *.zip
 .vercel
 .env*.local
+beamuo-addon-list.txt
