@@ -9,10 +9,12 @@ const ElementsObj = {
   statusText: document.getElementById('statusText'),
   lastUpdatedText: document.getElementById('lastUpdatedText'),
   totalHits: document.getElementById('totalHits'),
+  totalHitsDelta: document.getElementById('totalHitsDelta'),
   uniqueVisitors: document.getElementById('uniqueVisitors'),
-  todayHits: document.getElementById('todayHits'),
-  todayVisitors: document.getElementById('todayVisitors'),
+  uniqueVisitorsDelta: document.getElementById('uniqueVisitorsDelta'),
   recentHits: document.getElementById('recentHits'),
+  recentHitsDelta: document.getElementById('recentHitsDelta'),
+  recentHitsDeltaWrap: document.getElementById('recentHitsDeltaWrap'),
   trackedRoutes: document.getElementById('trackedRoutes'),
   todayLabel: document.getElementById('todayLabel'),
   trendLabel: document.getElementById('trendLabel'),
@@ -41,6 +43,21 @@ function FormatNumber(ValueInt) {
   return new Intl.NumberFormat().format(Number(ValueInt || 0))
 }
 
+function FormatDelta(ValueInt, ForceSignBool = false) {
+  const NumericValueInt = Number(ValueInt || 0)
+  const AbsStr = FormatNumber(Math.abs(NumericValueInt))
+
+  if (NumericValueInt > 0) {
+    return `+${AbsStr}`
+  }
+
+  if (NumericValueInt < 0) {
+    return `-${AbsStr}`
+  }
+
+  return ForceSignBool ? '+0' : '0'
+}
+
 function FormatDateTime(IsoStr) {
   if (!IsoStr) {
     return 'Never'
@@ -57,15 +74,27 @@ function SetStatus(MessageStr, IsErrorBool = false) {
   ElementsObj.statusStrip.classList.toggle('error', IsErrorBool)
 }
 
-function SetSummary(DataObj) {
+function SetSummary(DataObj, DaysArr) {
   ElementsObj.totalHits.textContent = FormatNumber(DataObj.totals.hits)
+  ElementsObj.totalHitsDelta.textContent = FormatDelta(DataObj.totals.todayHits, true)
   ElementsObj.uniqueVisitors.textContent = FormatNumber(DataObj.totals.visitors)
-  ElementsObj.todayHits.textContent = FormatNumber(DataObj.totals.todayHits)
-  ElementsObj.todayVisitors.textContent = FormatNumber(DataObj.totals.todayVisitors)
+  ElementsObj.uniqueVisitorsDelta.textContent = FormatDelta(DataObj.totals.todayVisitors, true)
   ElementsObj.recentHits.textContent = FormatNumber(DataObj.totals.recentHits)
   ElementsObj.trackedRoutes.textContent = FormatNumber(DataObj.totals.routes)
   ElementsObj.todayLabel.textContent = `${DataObj.today} (${DataObj.timeZone})`
   ElementsObj.trendLabel.textContent = 'Last 14 days'
+
+  const RecentSummaryInt = 7
+  const RecentDaysArr = DaysArr.slice(-RecentSummaryInt)
+  const PreviousDaysArr = DaysArr.slice(-(RecentSummaryInt * 2), -RecentSummaryInt)
+  const RecentTotalInt = RecentDaysArr.reduce((TotalInt, DayObj) => TotalInt + DayObj.hits, 0)
+  const PreviousTotalInt = PreviousDaysArr.reduce((TotalInt, DayObj) => TotalInt + DayObj.hits, 0)
+  const DifferenceInt = RecentTotalInt - PreviousTotalInt
+  const DeltaClassStr = DifferenceInt > 0 ? 'positive' : DifferenceInt < 0 ? 'negative' : 'neutral'
+
+  ElementsObj.recentHitsDelta.textContent = FormatDelta(DifferenceInt)
+  ElementsObj.recentHitsDeltaWrap.classList.remove('positive', 'negative', 'neutral')
+  ElementsObj.recentHitsDeltaWrap.classList.add(DeltaClassStr)
 }
 
 function CreateEmptyState(MessageStr) {
@@ -129,8 +158,7 @@ function AggregateDays(RoutesArr) {
     .sort((LeftObj, RightObj) => LeftObj.date.localeCompare(RightObj.date))
 }
 
-function RenderTrendChart(DataObj) {
-  const DaysArr = AggregateDays(DataObj.routes)
+function RenderTrendChart(DaysArr) {
   const MaxHitsInt = Math.max(...DaysArr.map((DayObj) => DayObj.hits), 0)
 
   if (!DaysArr.length || MaxHitsInt === 0) {
@@ -144,16 +172,31 @@ function RenderTrendChart(DataObj) {
   const BottomPaddingInt = 34
   const InnerWidthInt = WidthInt - (PaddingInt * 2)
   const InnerHeightInt = HeightInt - PaddingInt - BottomPaddingInt
-  const PointsStr = DaysArr
-    .map((DayObj, IndexInt) => {
-      const XInt = PaddingInt + ((InnerWidthInt / Math.max(DaysArr.length - 1, 1)) * IndexInt)
-      const YInt = PaddingInt + (InnerHeightInt - ((DayObj.hits / MaxHitsInt) * InnerHeightInt))
-      return `${XInt.toFixed(2)},${YInt.toFixed(2)}`
-    })
+  const PointDataArr = DaysArr.map((DayObj, IndexInt) => {
+    const XInt = PaddingInt + ((InnerWidthInt / Math.max(DaysArr.length - 1, 1)) * IndexInt)
+    const YInt = PaddingInt + (InnerHeightInt - ((DayObj.hits / MaxHitsInt) * InnerHeightInt))
+
+    return {
+      date: DayObj.date,
+      hits: DayObj.hits,
+      x: XInt,
+      y: YInt,
+    }
+  })
+  const PointsStr = PointDataArr
+    .map((PointObj) => `${PointObj.x.toFixed(2)},${PointObj.y.toFixed(2)}`)
     .join(' ')
   const AreaPointsStr = `${PaddingInt},${HeightInt - BottomPaddingInt} ${PointsStr} ${WidthInt - PaddingInt},${HeightInt - BottomPaddingInt}`
   const FirstDateStr = DaysArr[0].date
   const LastDateStr = DaysArr[DaysArr.length - 1].date
+  const PointsMarkupStr = PointDataArr
+    .map((PointObj) => `
+      <g class="trend-point-group" data-date="${PointObj.date}" data-hits="${PointObj.hits}" tabindex="0" role="button" aria-label="${PointObj.date}: ${FormatNumber(PointObj.hits)} hits">
+        <circle class="trend-hit" cx="${PointObj.x.toFixed(2)}" cy="${PointObj.y.toFixed(2)}" r="12"></circle>
+        <circle class="trend-point" cx="${PointObj.x.toFixed(2)}" cy="${PointObj.y.toFixed(2)}" r="4"></circle>
+      </g>
+    `)
+    .join('')
 
   ElementsObj.trendChart.innerHTML = `
     <svg class="trend-svg" viewBox="0 0 ${WidthInt} ${HeightInt}" role="img" aria-label="Daily route hits">
@@ -167,13 +210,83 @@ function RenderTrendChart(DataObj) {
       <line x1="${PaddingInt}" y1="${HeightInt - BottomPaddingInt}" x2="${WidthInt - PaddingInt}" y2="${HeightInt - BottomPaddingInt}" stroke="#273044" stroke-width="1"></line>
       <polygon points="${AreaPointsStr}" fill="url(#trendFill)"></polygon>
       <polyline points="${PointsStr}" fill="none" stroke="#64d2ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
+      ${PointsMarkupStr}
     </svg>
+    <div class="trend-tooltip" aria-hidden="true">
+      <span class="trend-tooltip-date"></span>
+      <strong class="trend-tooltip-value"></strong>
+    </div>
     <div class="trend-labels">
       <span>${FirstDateStr}</span>
       <strong>${FormatNumber(MaxHitsInt)} peak</strong>
       <span>${LastDateStr}</span>
     </div>
   `
+
+  const TooltipElement = ElementsObj.trendChart.querySelector('.trend-tooltip')
+  const TooltipDateElement = ElementsObj.trendChart.querySelector('.trend-tooltip-date')
+  const TooltipValueElement = ElementsObj.trendChart.querySelector('.trend-tooltip-value')
+  const PointGroupElementsArr = [...ElementsObj.trendChart.querySelectorAll('.trend-point-group')]
+
+  if (!TooltipElement || !TooltipDateElement || !TooltipValueElement || !PointGroupElementsArr.length) {
+    return
+  }
+
+  const PositionTooltip = (TargetElement) => {
+    const ContainerRect = ElementsObj.trendChart.getBoundingClientRect()
+    const PointElement = TargetElement.querySelector('.trend-point')
+
+    if (!PointElement) {
+      return
+    }
+
+    const PointRect = PointElement.getBoundingClientRect()
+    const TooltipRect = TooltipElement.getBoundingClientRect()
+    const CenterX = PointRect.left + (PointRect.width / 2) - ContainerRect.left
+    const CenterY = PointRect.top + (PointRect.height / 2) - ContainerRect.top
+    const OffsetInt = 12
+    let LeftInt = CenterX - (TooltipRect.width / 2)
+    let TopInt = CenterY - TooltipRect.height - OffsetInt
+
+    LeftInt = Math.min(Math.max(LeftInt, 8), ContainerRect.width - TooltipRect.width - 8)
+    TopInt = Math.min(Math.max(TopInt, 8), ContainerRect.height - TooltipRect.height - 8)
+
+    TooltipElement.style.left = `${LeftInt}px`
+    TooltipElement.style.top = `${TopInt}px`
+  }
+
+  const ShowTooltip = (TargetElement) => {
+    const HitsInt = Number(TargetElement.dataset.hits || 0)
+    const DateStr = TargetElement.dataset.date || ''
+
+    TooltipDateElement.textContent = DateStr
+    TooltipValueElement.textContent = `${FormatNumber(HitsInt)} hits`
+    TooltipElement.classList.add('is-visible')
+    TooltipElement.setAttribute('aria-hidden', 'false')
+    PointGroupElementsArr.forEach((Element) => Element.classList.toggle('is-active', Element === TargetElement))
+    PositionTooltip(TargetElement)
+  }
+
+  const HideTooltip = () => {
+    TooltipElement.classList.remove('is-visible')
+    TooltipElement.setAttribute('aria-hidden', 'true')
+    PointGroupElementsArr.forEach((Element) => Element.classList.remove('is-active'))
+  }
+
+  for (const PointGroupElement of PointGroupElementsArr) {
+    PointGroupElement.addEventListener('mouseenter', () => ShowTooltip(PointGroupElement))
+    PointGroupElement.addEventListener('mousemove', () => PositionTooltip(PointGroupElement))
+    PointGroupElement.addEventListener('mouseleave', HideTooltip)
+    PointGroupElement.addEventListener('focus', () => ShowTooltip(PointGroupElement))
+    PointGroupElement.addEventListener('blur', HideTooltip)
+    PointGroupElement.addEventListener('click', () => ShowTooltip(PointGroupElement))
+    PointGroupElement.addEventListener('keydown', (EventObj) => {
+      if (EventObj.key === 'Enter' || EventObj.key === ' ') {
+        EventObj.preventDefault()
+        ShowTooltip(PointGroupElement)
+      }
+    })
+  }
 }
 
 function BuildDonutGradient(TopSegmentsArr) {
@@ -301,10 +414,12 @@ function RenderRoutesTable(RoutesArr) {
 }
 
 function RenderDashboard(DataObj) {
-  SetSummary(DataObj)
+  const DaysArr = AggregateDays(DataObj.routes)
+
+  SetSummary(DataObj, DaysArr)
   RenderBarChart(ElementsObj.topRoutesChart, DataObj.routes, 'hits', 'No route hits yet')
   RenderBarChart(ElementsObj.todayRoutesChart, DataObj.routes, 'todayHits', 'No traffic today')
-  RenderTrendChart(DataObj)
+  RenderTrendChart(DaysArr)
   RenderAudiencePanel(ElementsObj.countriesPanel, DataObj.audience.countries, 'No country data yet')
   RenderAudiencePanel(ElementsObj.devicesPanel, DataObj.audience.devices, 'No device data yet')
   RenderAudiencePanel(ElementsObj.browsersPanel, DataObj.audience.browsers, 'No browser data yet')

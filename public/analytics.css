@@ -111,7 +111,7 @@ button:hover {
 
 .summary-grid {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 12px;
 }
@@ -141,6 +141,47 @@ button:hover {
   font-size: 36px;
   line-height: 1;
   font-weight: 850;
+  font-variant-numeric: tabular-nums;
+}
+
+.metric-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.metric-delta {
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+  text-align: right;
+}
+
+.metric-delta span {
+  color: #8793a9;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.metric-delta strong {
+  font-size: 14px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.metric-delta.positive strong {
+  color: #7ddc91;
+}
+
+.metric-delta.negative strong {
+  color: #fb7185;
+}
+
+.metric-delta.neutral strong {
+  color: #9ca8bd;
 }
 
 .metric-panel:nth-child(1) {
@@ -157,14 +198,6 @@ button:hover {
 
 .metric-panel:nth-child(4) {
   border-top-color: #fb7185;
-}
-
-.metric-panel:nth-child(5) {
-  border-top-color: #f472b6;
-}
-
-.metric-panel:nth-child(6) {
-  border-top-color: #a78bfa;
 }
 
 .status-strip {
@@ -276,6 +309,7 @@ button:hover {
 
 .trend-chart {
   min-height: 220px;
+  position: relative;
 }
 
 .trend-empty,
@@ -293,6 +327,67 @@ button:hover {
   display: block;
   width: 100%;
   height: 190px;
+}
+
+.trend-point-group {
+  cursor: pointer;
+  outline: none;
+}
+
+.trend-hit {
+  fill: transparent;
+  pointer-events: all;
+}
+
+.trend-point {
+  fill: #64d2ff;
+  stroke: #0d1220;
+  stroke-width: 2;
+  transform-origin: center;
+  transform-box: fill-box;
+  transition: transform 120ms ease, fill 120ms ease;
+}
+
+.trend-point-group:hover .trend-point,
+.trend-point-group.is-active .trend-point,
+.trend-point-group:focus .trend-point {
+  fill: #9fe3ff;
+  transform: scale(1.35);
+}
+
+.trend-tooltip {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  gap: 4px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #0f1522;
+  border: 1px solid #2b3548;
+  box-shadow: 0 12px 28px rgba(3, 6, 12, 0.5);
+  color: #f4f7fb;
+  font-size: 12px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+}
+
+.trend-tooltip.is-visible {
+  opacity: 1;
+}
+
+.trend-tooltip-date {
+  color: #9ca8bd;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.trend-tooltip-value {
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
 }
 
 .trend-labels {
@@ -475,7 +570,7 @@ td {
   }
 
   .summary-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .chart-grid,

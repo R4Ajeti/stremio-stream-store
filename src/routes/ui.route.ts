@@ -125,25 +125,35 @@ export async function UiRoute(App: FastifyInstance) {
     </header>
 
     <section class="summary-grid" aria-label="Route analytics summary">
-      <article class="metric-panel">
+      <article class="metric-panel metric-split">
         <span>Total hits</span>
-        <strong id="totalHits">0</strong>
+        <div class="metric-row">
+          <strong id="totalHits">0</strong>
+          <div class="metric-delta positive">
+            <span>Today</span>
+            <strong id="totalHitsDelta">+0</strong>
+          </div>
+        </div>
       </article>
-      <article class="metric-panel">
+      <article class="metric-panel metric-split">
         <span>Unique visitors</span>
-        <strong id="uniqueVisitors">0</strong>
+        <div class="metric-row">
+          <strong id="uniqueVisitors">0</strong>
+          <div class="metric-delta positive">
+            <span>Today</span>
+            <strong id="uniqueVisitorsDelta">+0</strong>
+          </div>
+        </div>
       </article>
-      <article class="metric-panel">
-        <span>Hits today</span>
-        <strong id="todayHits">0</strong>
-      </article>
-      <article class="metric-panel">
-        <span>Visitors today</span>
-        <strong id="todayVisitors">0</strong>
-      </article>
-      <article class="metric-panel">
+      <article class="metric-panel metric-split">
         <span>Last 7 days</span>
-        <strong id="recentHits">0</strong>
+        <div class="metric-row">
+          <strong id="recentHits">0</strong>
+          <div class="metric-delta neutral" id="recentHitsDeltaWrap">
+            <span>Vs prev 7 days</span>
+            <strong id="recentHitsDelta">0</strong>
+          </div>
+        </div>
       </article>
       <article class="metric-panel">
         <span>Tracked routes</span>
