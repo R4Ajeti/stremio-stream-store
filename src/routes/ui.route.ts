@@ -32,10 +32,24 @@ export async function UiRoute(App: FastifyInstance) {
       </div>
     </section>
 
-    <section class="card install-card">
-      <h2>Install Addon</h2>
-      <p>Use this manifest URL in Stremio:</p>
-      <code id="manifestUrl"></code>
+    <section class="install-row">
+      <section class="card install-card">
+        <h2>Install Addon</h2>
+        <p>Use this manifest URL in Stremio:</p>
+        <code id="manifestUrl"></code>
+      </section>
+
+      <section class="card support-card">
+        <p>Stremio Stream Store is free and open source. If it helps you, you can support hosting, maintenance, and future development on Ko-fi.</p>
+        <div class="support-actions">
+          <a class="support-button" href="https://ko-fi.com/r4ajeti" target="_blank" rel="noopener noreferrer">
+            <span class="support-icon" aria-hidden="true">
+              <img class="support-icon-img" src="/public/ko-fi-coffie-image.webp" alt="" />
+            </span>
+            <span>Support</span>
+          </a>
+        </div>
+      </section>
     </section>
 
     <section class="grid">
@@ -85,6 +99,7 @@ export async function UiRoute(App: FastifyInstance) {
         <pre id="serieResult"></pre>
       </form>
     </section>
+
   </main>
 
   ${AnalyticsScriptStr}
@@ -123,6 +138,16 @@ export async function UiRoute(App: FastifyInstance) {
         <button type="button" id="refreshButton">Refresh</button>
       </form>
     </header>
+
+    <section class="panel support-panel">
+      <p>Running this addon requires hosting, monitoring, and maintenance. Support the project if you want to help keep it online and improving.</p>
+      <a class="support-link" href="https://ko-fi.com/r4ajeti" target="_blank" rel="noopener noreferrer">
+        <span class="support-icon" aria-hidden="true">
+          <img class="support-icon-img" src="/public/ko-fi-coffie-image.webp" alt="" />
+        </span>
+        <span>Support on Ko-fi</span>
+      </a>
+    </section>
 
     <section class="summary-grid" aria-label="Route analytics summary">
       <article class="metric-panel metric-split">

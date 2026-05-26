@@ -53,7 +53,7 @@ export const Env = {
   ADDON_BASE_URL: NormalizeBaseUrlStr(GetRequiredEnv('ADDON_BASE_URL')),
   ADDON_ID: 'org.stremio.stream.store',
   ADDON_NAME: 'Stremio Stream Store',
-  ADDON_DESCRIPTION: 'Save and serve custom stream links for movies and TV episodes using IMDb IDs.',
+  ADDON_DESCRIPTION: 'Save and serve custom stream links for movies and TV episodes using IMDb IDs. Free and open source. Support development: https://ko-fi.com/r4ajeti',
   FIREBASE_PROJECT_ID: GetRequiredEnv('FIREBASE_PROJECT_ID'),
   FIREBASE_CLIENT_EMAIL: GetRequiredEnv('FIREBASE_CLIENT_EMAIL'),
   FIREBASE_PRIVATE_KEY: GetFirebasePrivateKeyStr(),

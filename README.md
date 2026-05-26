@@ -416,3 +416,9 @@ curl -X POST http://localhost:3000/api/link/serie \
 curl http://localhost:3000/stream/series/tt1234567:1:2.json
 curl http://localhost:3000/stream/series/tt1234567/1/2.json
 ```
+
+## Support
+
+Stremio Stream Store is free and open source. If you find it useful, you can support hosting, maintenance, and future development:
+
+[Support on Ko-fi](https://ko-fi.com/r4ajeti)
