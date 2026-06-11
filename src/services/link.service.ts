@@ -27,6 +27,7 @@ async function SaveAtPath(PathStr: string, UrlStr: string): Promise<SaveLinkResu
   return {
     path: PathStr,
     link: LinkObj,
+    wasCreated: !ExistingObj,
   }
 }
 

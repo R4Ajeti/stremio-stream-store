@@ -19,6 +19,7 @@ export type SerieLinkRequest = {
 export type SaveLinkResult = {
   path: string
   link: StoredLink
+  wasCreated: boolean
 }
 
 export type StremioStreamResponse = {

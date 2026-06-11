@@ -2,7 +2,6 @@ import type { FastifyInstance, FastifyReply } from 'fastify'
 import { ZodError } from 'zod'
 
 import { GetMovieLink, GetSerieLink } from '../services/link.service.js'
-import { trackRoute } from '../services/analytics.service.js'
 import type { StremioStreamResponse } from '../types/link.type.js'
 import { MovieStreamParamSchema, SeriesIdParamSchema, SeriesPathParamSchema } from '../validators/link.validator.js'
 
@@ -50,8 +49,14 @@ function ValidationErrorResponse(ErrorObj: ZodError): { streams: []; error: stri
 }
 
 export async function StreamRoute(App: FastifyInstance) {
-  App.get('/stream/movie/:imdbId.json', async (RequestObj, ReplyObj) => {
-    await trackRoute('/stream/movie/:imdbId.json', { method: RequestObj.method, headers: RequestObj.headers, ip: RequestObj.ip })
+  App.get('/stream/movie/:imdbId.json', {
+    config: {
+      rateLimit: {
+        max: 180,
+        timeWindow: '1 minute',
+      },
+    },
+  }, async (RequestObj, ReplyObj) => {
     SetNoStoreHeaders(ReplyObj)
 
     try {
@@ -73,8 +78,14 @@ export async function StreamRoute(App: FastifyInstance) {
     }
   })
 
-  App.get('/stream/series/:id.json', async (RequestObj, ReplyObj) => {
-    await trackRoute('/stream/series/:id.json', { method: RequestObj.method, headers: RequestObj.headers, ip: RequestObj.ip })
+  App.get('/stream/series/:id.json', {
+    config: {
+      rateLimit: {
+        max: 180,
+        timeWindow: '1 minute',
+      },
+    },
+  }, async (RequestObj, ReplyObj) => {
     SetNoStoreHeaders(ReplyObj)
 
     try {
@@ -97,8 +108,14 @@ export async function StreamRoute(App: FastifyInstance) {
     }
   })
 
-  App.get('/stream/series/:imdbId/:season/:episode.json', async (RequestObj, ReplyObj) => {
-    await trackRoute('/stream/series/:imdbId/:season/:episode.json', { method: RequestObj.method, headers: RequestObj.headers, ip: RequestObj.ip })
+  App.get('/stream/series/:imdbId/:season/:episode.json', {
+    config: {
+      rateLimit: {
+        max: 180,
+        timeWindow: '1 minute',
+      },
+    },
+  }, async (RequestObj, ReplyObj) => {
     SetNoStoreHeaders(ReplyObj)
 
     try {

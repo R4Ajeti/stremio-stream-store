@@ -2,14 +2,15 @@ import { createHash } from 'node:crypto'
 import type { IncomingHttpHeaders } from 'node:http'
 
 import { RealtimeDb } from './firebase.service.js'
+import { Env } from '../config/env.js'
 import { GetCurrentIsoDateStr } from '../utils/date.util.js'
 
 const TrackTimeoutMsInt = 750
 const RetainedDayCountInt = 90
 const ResponseDayCountInt = 14
 const RecentSummaryDayCountInt = 7
-const AnalyticsTimeZoneStr = process.env.ANALYTICS_TIME_ZONE || 'UTC'
-const AnalyticsIpSaltStr = process.env.ANALYTICS_IP_SALT || process.env.FIREBASE_PROJECT_ID || 'stremio-stream-store'
+const AnalyticsTimeZoneStr = Env.ANALYTICS_TIME_ZONE
+const AnalyticsIpSaltStr = Env.ANALYTICS_IP_SALT
 
 const TrackedRoutesArr = [
   { route: '/', method: 'GET' },
@@ -466,8 +467,21 @@ async function WaitForTrackResultOrTimeout(TrackPromiseObj: Promise<void | undef
 }
 
 export async function trackRoute(RouteStr: string, ContextObj: AnalyticsRequestContext): Promise<void> {
+  if (!Env.ANALYTICS_ENABLED) {
+    return
+  }
+
   const TrackPromiseObj = TrackRequestAnalytics(RouteStr, ContextObj).catch(() => undefined)
   await WaitForTrackResultOrTimeout(TrackPromiseObj)
+}
+
+function BuildEmptyAudienceAnalytics(): AudienceAnalyticsRecord {
+  return {
+    countries: [],
+    devices: [],
+    browsers: [],
+    operatingSystems: [],
+  }
 }
 
 function BuildRouteRecord(
@@ -634,6 +648,25 @@ async function GetAudienceAnalytics(): Promise<{
 }
 
 export async function GetRouteAnalytics(): Promise<RouteAnalyticsResponse> {
+  if (!Env.ANALYTICS_ENABLED) {
+    const RoutesArr = TrackedRoutesArr.map((RouteObj) => BuildRouteRecord(RouteObj.route, RouteObj.method))
+
+    return {
+      today: GetAnalyticsDateKeyStr(),
+      timeZone: AnalyticsTimeZoneStr,
+      totals: {
+        hits: 0,
+        todayHits: 0,
+        recentHits: 0,
+        visitors: 0,
+        todayVisitors: 0,
+        routes: RoutesArr.length,
+      },
+      audience: BuildEmptyAudienceAnalytics(),
+      routes: RoutesArr,
+    }
+  }
+
   const [SnapshotObj, AudienceObj] = await Promise.all([
     RealtimeDb.ref('analytics/routes').get(),
     GetAudienceAnalytics(),

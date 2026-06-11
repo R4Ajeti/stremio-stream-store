@@ -1,16 +1,14 @@
 import type { FastifyInstance } from 'fastify'
-import { trackRoute } from '../services/analytics.service.js'
+
+import { Env } from '../config/env.js'
 
 export async function UiRoute(App: FastifyInstance) {
-  App.get('/', async (RequestObj, ReplyObj) => {
-    // track redirect
-    await trackRoute('/', { method: RequestObj.method, headers: RequestObj.headers, ip: RequestObj.ip })
+  App.get('/', async (_RequestObj, ReplyObj) => {
     return ReplyObj.redirect('/set')
   })
 
-  App.get('/set', async (RequestObj, ReplyObj) => {
-    await trackRoute('/set', { method: RequestObj.method, headers: RequestObj.headers, ip: RequestObj.ip })
-    const AnalyticsScriptStr = process.env.VERCEL ? '<script defer src="/_vercel/insights/script.js"></script>' : ''
+  App.get('/set', async (_RequestObj, ReplyObj) => {
+    const AnalyticsScriptStr = Env.IS_VERCEL ? '<script defer src="/_vercel/insights/script.js"></script>' : ''
 
     return ReplyObj.type('text/html').send(`<!doctype html>
 <html lang="en">
@@ -37,6 +35,23 @@ export async function UiRoute(App: FastifyInstance) {
         <h2>Install Addon</h2>
         <p>Use this manifest URL in Stremio:</p>
         <code id="manifestUrl"></code>
+        <div class="action-row">
+          <button type="button" class="secondary-button" id="copyManifestButton">Copy URL</button>
+          <a class="install-button" id="installButton" href="/manifest.json">Open in Stremio</a>
+        </div>
+        <p class="inline-status" id="manifestStatus" aria-live="polite"></p>
+      </section>
+
+      <section class="card admin-card">
+        <h2>Admin Access</h2>
+        <label>
+          Write token
+          <input id="writeTokenInput" type="password" autocomplete="off" placeholder="Only required when configured" />
+        </label>
+        <label class="checkbox-label">
+          <input id="rememberWriteTokenInput" type="checkbox" />
+          <span>Remember on this device</span>
+        </label>
       </section>
 
       <section class="card support-card">
@@ -67,7 +82,11 @@ export async function UiRoute(App: FastifyInstance) {
         </label>
 
         <button type="submit">Save Movie</button>
-        <pre id="movieResult"></pre>
+        <p class="result-message" id="movieMessage" aria-live="polite"></p>
+        <details class="result-details">
+          <summary>Response details</summary>
+          <pre id="movieResult"></pre>
+        </details>
       </form>
 
       <form class="card" id="serieForm">
@@ -96,7 +115,11 @@ export async function UiRoute(App: FastifyInstance) {
         </label>
 
         <button type="submit">Save Episode</button>
-        <pre id="serieResult"></pre>
+        <p class="result-message" id="serieMessage" aria-live="polite"></p>
+        <details class="result-details">
+          <summary>Response details</summary>
+          <pre id="serieResult"></pre>
+        </details>
       </form>
     </section>
 
@@ -108,9 +131,7 @@ export async function UiRoute(App: FastifyInstance) {
 </html>`)
   })
 
-  App.get('/ui/analytics/routes', async (RequestObj, ReplyObj) => {
-    await trackRoute('/ui/analytics/routes', { method: RequestObj.method, headers: RequestObj.headers, ip: RequestObj.ip })
-
+  App.get('/ui/analytics/routes', async (_RequestObj, ReplyObj) => {
     return ReplyObj.type('text/html').send(`<!doctype html>
 <html lang="en">
 <head>
